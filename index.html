@@ -327,7 +327,7 @@
     <section class="hero-grid">
       <div class="observation-square">
         <div class="central-image">
-          <img src="field-1.png" alt="Isosurface volume on Cartesian axes">
+          <img src="assets/isosurface-volume-cartesian-axes.png" alt="Isosurface volume on Cartesian axes">
         </div>
         <div class="edge-box top" id="solarValue">irradiance: --</div>
         <div class="edge-box bottom" id="timeValue">observation: --</div>
@@ -367,15 +367,15 @@
         <svg class="chart-svg" id="temperatureChart"></svg>
       </div>
       <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">atmospheric pressure + pressure trend</div><div class="chart-note">previous 72 h as 1-hour means · next 24 h forecast · 2 h vertical grid</div></div>
+        <div class="chart-header"><div class="chart-title">atmospheric pressure + pressure trend</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
         <svg class="chart-svg" id="pressureChart"></svg>
       </div>
       <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">relative humidity</div><div class="chart-note">previous 72 h as 1-hour means · next 24 h forecast · 2 h vertical grid</div></div>
+        <div class="chart-header"><div class="chart-title">relative humidity</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
         <svg class="chart-svg" id="humidityChart"></svg>
       </div>
       <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">solar irradiance</div><div class="chart-note">previous 72 h as 1-hour means · next 24 h forecast · 2 h vertical grid</div></div>
+        <div class="chart-header"><div class="chart-title">solar irradiance</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
         <svg class="chart-svg" id="solarChart"></svg>
       </div>
     </section>
@@ -424,7 +424,7 @@
 
     <section class="observation-square closing-observation" aria-label="Meteorological observations: past and present">
       <div class="central-image">
-        <img src="field-2.png" alt="Full-sized defined isosurface field domain">
+        <img src="assets/full-sized-defined-isosurface-field-domain.png" alt="Full-sized defined isosurface field domain">
       </div>
       <div class="edge-box top">meteorological</div>
       <div class="edge-box bottom">observations</div>
@@ -874,9 +874,23 @@
       showBand:displayOptions.show_uncertainty,
       bandLowerKey:'temperature_lower', bandUpperKey:'temperature_upper'
     });
-    drawLineChart(document.getElementById('pressureChart'), observed, adjusted, 'pressure', 'pressure hPa', {decimals:2, leftMargin:94, axisLabelX:16});
-    drawLineChart(document.getElementById('humidityChart'), observed, adjusted, 'humidity', 'humidity %', {min:0, max:100, decimals:0});
-    drawLineChart(document.getElementById('solarChart'), observed, adjusted, 'solar_radiation', 'irradiance W/m²', {min:0, decimals:0});
+    drawLineChart(document.getElementById('pressureChart'), observed, adjusted, 'pressure', 'pressure hPa', {
+      decimals:2,
+      leftMargin:94,
+      axisLabelX:16,
+      extraSeries:[{key:'pressure', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
+    });
+    drawLineChart(document.getElementById('humidityChart'), observed, adjusted, 'humidity', 'humidity %', {
+      min:0,
+      max:100,
+      decimals:0,
+      extraSeries:[{key:'humidity', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
+    });
+    drawLineChart(document.getElementById('solarChart'), observed, adjusted, 'solar_radiation', 'irradiance W/m²', {
+      min:0,
+      decimals:0,
+      extraSeries:[{key:'solar_radiation', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
+    });
     renderTemperatureLegend();
     drawHeroPressure();
   }
