@@ -465,3 +465,415 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
 @media (max-width: 540px) {
   .measurement-row { grid-template-columns: minmax(118px, 1fr) 68px 50px; }
 }
+
+
+/* Editorial meteorological system — asymmetrical, typographic, and deliberately sparse. */
+:root {
+  --font-display: Arial, Helvetica, sans-serif;
+  --page: #ececea;
+  --panel: #ffffff;
+  --ink: #101010;
+  --muted: #666662;
+  --line: #c9c9c4;
+}
+
+body { background: var(--page); }
+.site-shell { max-width: 1500px; padding-inline: clamp(18px, 4vw, 58px); }
+
+/* Masthead: large display type against compact technical metadata. */
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  padding: 26px 0 18px;
+  border-bottom: 2px solid var(--ink);
+}
+.wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(5.8rem, 13vw, 12rem);
+  font-weight: 700;
+  line-height: .72;
+  letter-spacing: -.09em;
+  text-transform: none;
+}
+.masthead-meta {
+  align-self: end;
+  min-width: 210px;
+  padding-bottom: 2px;
+  font-size: .6875rem;
+  line-height: 1.35;
+}
+.masthead-meta .eyebrow { display: block; }
+.technical-meta { display: none; }
+
+.navigation {
+  min-height: 42px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--ink);
+}
+.nav-links { gap: 22px; }
+.nav-links a {
+  min-height: 36px;
+  font-size: .75rem;
+  text-decoration: none;
+}
+.nav-links a:hover { text-decoration: underline; }
+.refresh-button {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.refresh-button svg { display: none; }
+.refresh-button:hover { background: transparent; color: var(--ink); text-decoration: underline; }
+
+/* Numbered editorial sections. */
+.observations, .weather-section, .calibration-section {
+  position: relative;
+  padding-top: 54px;
+}
+.observations::before, .weather-section::before, .calibration-section::before {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.04em;
+}
+.observations::before { content: "01"; }
+.weather-section::before { content: "02"; }
+.calibration-section::before { content: "03"; }
+
+.section-heading {
+  padding-left: 52px;
+  margin-bottom: 15px;
+}
+.section-heading .eyebrow {
+  margin-bottom: 2px;
+  font-size: .625rem;
+  letter-spacing: .08em;
+}
+.section-heading h1,
+.section-heading h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.2vw, 4.2rem);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -.055em;
+}
+.overview-heading h1 {
+  font-size: clamp(2.1rem, 4.2vw, 4.2rem);
+  text-transform: none;
+  letter-spacing: -.055em;
+}
+.overview-heading .eyebrow { display: block; }
+
+.status-badge {
+  align-self: end;
+  margin-bottom: 3px;
+  font-size: .6875rem;
+  letter-spacing: 0;
+}
+.status-line {
+  margin: 0 0 18px 52px;
+  max-width: 72ch;
+  font-size: .6875rem;
+}
+
+/* Current data: composition rather than dashboard card. */
+.current-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, .9fr) minmax(420px, 1.3fr);
+  gap: clamp(24px, 5vw, 80px);
+  align-items: end;
+  padding: 18px 0 6px 52px;
+  border: 0;
+  background: transparent;
+}
+.primary-reading {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+.register-label {
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: .625rem;
+  color: var(--muted);
+}
+.register-label span:first-child { font-weight: 400; color: var(--muted); }
+.temperature-reading {
+  margin: 0;
+  align-items: flex-start;
+}
+.temperature-reading > span:first-child {
+  font-family: var(--font-display);
+  font-size: clamp(8rem, 17vw, 15rem);
+  font-weight: 700;
+  line-height: .7;
+  letter-spacing: -.09em;
+}
+.large-unit {
+  padding-top: .55em;
+  margin-left: 10px;
+  font-size: 1rem;
+}
+.reading-time {
+  margin-top: 22px;
+  font-size: .625rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.measurement-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+  align-self: stretch;
+  border-top: 2px solid var(--ink);
+}
+.measurement-row {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto auto;
+  align-items: end;
+  padding: 11px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.measurement-code { display: none; }
+.measurement-name {
+  align-self: start;
+  padding: 0 14px 0 0;
+  font-size: .6875rem;
+  line-height: 1.25;
+  color: var(--muted);
+}
+.measurement-value {
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 3.8vw, 4rem);
+  font-weight: 700;
+  line-height: .8;
+  letter-spacing: -.055em;
+}
+.measurement-unit {
+  min-width: 48px;
+  padding: 0 0 2px 8px;
+  font-size: .625rem;
+}
+
+/* Chart controls become typography rather than button chrome. */
+.chart-toolbar {
+  margin-left: 52px;
+  padding: 2px 0 14px;
+  border-top: 0;
+}
+.series-options {
+  gap: 8px 20px;
+}
+.series-options label {
+  min-height: 28px;
+  font-size: .6875rem;
+}
+.series-options input {
+  width: 13px;
+  height: 13px;
+}
+.legend-line, .legend-band { width: 15px; }
+.chart-guidance { display: none; }
+
+.charts-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 36px 26px;
+  margin-left: 52px;
+}
+.chart-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.chart-heading {
+  min-height: 34px;
+  margin: 0;
+  padding: 0 0 7px;
+  border-bottom: 2px solid var(--ink);
+}
+.chart-heading h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  text-transform: none;
+}
+.chart-unit { font-size: .625rem; }
+
+.plot-navigation {
+  margin: 6px 0 3px;
+  align-items: baseline;
+}
+.period-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 0;
+}
+.period-button {
+  min-height: 25px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .6875rem;
+}
+.period-button:hover {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+}
+.period-button[aria-pressed="true"] {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.plot-page-buttons {
+  gap: 8px;
+  border: 0;
+}
+.plot-page-buttons .button {
+  min-height: 25px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.plot-page-buttons .button:hover {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+}
+.plot-window {
+  margin: 1px 0 0;
+  min-height: 1.2em;
+  font-size: .625rem;
+}
+.plot-coverage {
+  min-height: 2.2em;
+  margin: 1px 0 8px;
+  font-size: .625rem !important;
+}
+.chart {
+  height: 300px;
+  border: 0;
+  background: #fff;
+}
+.chart-readout {
+  min-height: 46px;
+  margin: 0;
+  padding: 7px 0 0;
+  border-top: 0;
+  font-size: .625rem;
+}
+.chart-footnotes {
+  margin: 14px 0 0 52px;
+  font-size: .625rem;
+}
+
+/* Calibration follows the same editorial rhythm. */
+.calibration-section { border-top: 0; }
+.section-intro { margin: 0 0 20px 52px; max-width: 76ch; }
+.performance-grid {
+  margin-left: 52px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
+  border-top: 2px solid var(--ink);
+  border-bottom: 0;
+}
+.performance-metric,
+.performance-metric + .performance-metric {
+  padding: 12px 18px 18px 0;
+  border-left: 0;
+  border-bottom: 1px solid var(--line);
+}
+.performance-metric + .performance-metric { padding-left: 0; }
+.performance-metric h3 {
+  min-height: 0;
+  margin-bottom: 12px;
+  font-size: .6875rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.performance-value {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 4vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -.06em;
+}
+.performance-metric p { font-size: .625rem; }
+
+.model-details {
+  margin: 28px 0 0 52px;
+  border: 0;
+  border-top: 2px solid var(--ink);
+  background: transparent;
+}
+.model-details summary {
+  padding: 9px 0;
+  font-size: .6875rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.model-details[open] summary { border-bottom: 1px solid var(--line); }
+.details-content { padding: 0; }
+.coefficients-grid {
+  grid-template-columns: repeat(5, 1fr);
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.coefficient-chart {
+  border: 0;
+  background: #fff;
+}
+.mode-badge { align-self: end; margin-bottom: 5px; }
+
+.site-footer {
+  margin-top: 58px;
+  padding: 14px 0 26px;
+  border-top: 2px solid var(--ink);
+}
+.footer-wordmark {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -.06em;
+}
+
+@media (max-width: 900px) {
+  .current-panel {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .measurement-matrix { grid-template-columns: 1fr 1fr; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .performance-grid { grid-template-columns: 1fr 1fr; }
+  .performance-metric:nth-child(3) { border-top: 0; }
+}
+
+@media (max-width: 620px) {
+  .masthead { grid-template-columns: 1fr; gap: 22px; }
+  .masthead-meta { text-align: left; min-width: 0; }
+  .observations::before, .weather-section::before, .calibration-section::before { top: 42px; }
+  .section-heading, .status-line, .current-panel, .chart-toolbar, .charts-grid, .chart-footnotes, .section-intro, .performance-grid, .model-details { margin-left: 0; padding-left: 0; }
+  .section-heading { padding-left: 36px; }
+  .status-line { margin-left: 36px; }
+  .current-panel { padding-left: 0; }
+  .temperature-reading > span:first-child { font-size: clamp(7rem, 32vw, 11rem); }
+  .measurement-matrix { grid-template-columns: 1fr; }
+  .measurement-row { min-height: 64px; }
+  .charts-grid { gap: 30px; }
+  .performance-grid { grid-template-columns: 1fr 1fr; }
+  .coefficients-grid { grid-template-columns: 1fr 1fr; }
+}
