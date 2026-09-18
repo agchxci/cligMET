@@ -83,10 +83,10 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
 .legend-band { width: 20px; height: 9px; background: #dedede; border: 1px solid #b5b5b5; }
 .chart-guidance { color: var(--muted); font-size: .8125rem; margin: 0; }
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.chart-card { min-width: 0; border: 1px solid var(--line); background: var(--panel); padding: 20px 20px 0; }
+.chart-card { min-width: 0; border: 1px solid #8f8f8f; background: var(--panel); padding: 18px 18px 0; }
 .chart-heading { display: flex; gap: 15px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-.chart-heading h3 { margin: 0; font-size: 1rem; font-weight: 500; letter-spacing: -.02em; }
-.chart-unit { color: var(--muted); font-size: .875rem; }
+.chart-heading h3 { margin: 0; font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: .8125rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.chart-unit { color: var(--muted); font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: .75rem; letter-spacing: .04em; }
 .plot-navigation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 9px; }
 .plot-navigation select { flex: 1 1 120px; min-width: 110px; }
 .plot-page-buttons { display: flex; align-items: center; gap: 5px; }
@@ -97,10 +97,10 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
 .plot-window { min-height: 1.5em; margin: 0 0 5px; color: var(--ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .plot-coverage { min-height: 3em; margin: 0 0 11px; color: var(--muted); font-size: .8125rem; line-height: 1.5; }
 .plot-coverage[data-state="limited"], .plot-coverage[data-state="error"] { color: var(--warning); }
-.chart { display: block; width: 100%; height: 270px; overflow: visible; touch-action: pan-y; border-radius: 1px; }
+.chart { display: block; width: 100%; height: 270px; overflow: visible; touch-action: pan-y; border: 1px solid #c6c6c6; border-radius: 0; background: #fff; }
 .chart:focus-visible { outline-offset: 1px; }
-.chart text, .coefficient-chart text { font-family: Arial, Helvetica, sans-serif; }
-.chart-readout { min-height: 79px; font-size: .8125rem; color: var(--muted); border-top: 1px solid var(--line); margin-top: 8px; padding: 12px 0; line-height: 1.6; }
+.chart text, .coefficient-chart text { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+.chart-readout { min-height: 79px; font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); margin-top: 8px; padding: 10px 0 12px; line-height: 1.55; font-variant-numeric: tabular-nums; }
 .chart-readout strong { color: var(--ink); font-weight: 500; }
 .readout-time { display: block; margin-bottom: 2px; }
 .readout-values { display: flex; flex-wrap: wrap; gap: 1px 12px; }
@@ -254,3 +254,20 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
   .chart { height: 220px; }
   .chart-readout { min-height: 45px; }
 }
+
+/* 1990s technical-instrument treatment for plot controls and annotations. */
+.plot-navigation select,
+.plot-page-buttons .button,
+.plot-window,
+.plot-coverage,
+.chart-guidance,
+.series-options,
+.coefficient-header select,
+#coefficientDescription,
+.calibration-note {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.plot-window { letter-spacing: .025em; }
+.plot-coverage, .chart-guidance { font-size: .75rem; }
+.coefficient-chart { border-color: #8f8f8f; border-radius: 0; }
