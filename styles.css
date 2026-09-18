@@ -877,3 +877,9 @@ body { background: var(--page); }
   .performance-grid { grid-template-columns: 1fr 1fr; }
   .coefficients-grid { grid-template-columns: 1fr 1fr; }
 }
+
+
+/* Keep charts visually self-explanatory: suppress explanatory copy unless action is needed. */
+.chart-footnotes { display: none; }
+.plot-coverage:not([data-state="limited"]):not([data-state="error"]) { display: none; }
+.chart-readout:empty { display: none; }
