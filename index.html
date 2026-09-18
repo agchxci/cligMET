@@ -20,7 +20,7 @@
       <div class="masthead-meta">
         <span class="eyebrow">Meteorological observations</span>
         <span class="station-name" id="stationName">Station —</span>
-        <span class="muted" id="todayLabel">Past, present &amp; forecast</span>
+        <span class="muted" id="todayLabel">—</span>
         <span class="technical-meta" id="stationMeta">STN — · TZ — · UPDATE 60S</span>
         <button class="button refresh-button" id="refreshButton" type="button"><span id="refreshLabel">Refresh</span></button>
       </div>
@@ -35,13 +35,13 @@
           </div>
           <span class="status-badge" id="dataBadge">CONNECTING</span>
         </div>
-        <div class="status-line" id="statusLine" role="status" aria-live="polite">Loading the latest station reading…</div>
+        <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
 
         <article class="current-panel" id="weatherOverview" aria-busy="true">
           <div class="primary-reading">
             <div class="register-label"><span>TEMP</span><span>DRY BULB</span></div>
             <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
-            <p class="reading-time" id="observationTime">Waiting for an observation</p>
+            <p class="reading-time" id="observationTime">—</p>
           </div>
 
           <div class="measurement-matrix" aria-label="Current station measurements">
@@ -86,7 +86,7 @@
             <p class="plot-window" id="temperatureWindow"></p>
             <p class="plot-coverage" id="temperatureCoverage" role="status" aria-live="polite"></p>
             <svg class="chart" id="temperatureChart" role="img" aria-labelledby="temperatureChartTitle" aria-describedby="chartHelp temperatureReadout" tabindex="0"></svg>
-            <div class="chart-readout" id="temperatureReadout">Loading temperature…</div>
+            <div class="chart-readout" id="temperatureReadout"></div>
           </article>
           <article class="chart-card">
             <header class="chart-heading"><h3 id="pressureChartTitle">Pressure</h3><span class="chart-unit">hPa</span></header>
@@ -104,7 +104,7 @@
             <p class="plot-window" id="pressureWindow"></p>
             <p class="plot-coverage" id="pressureCoverage" role="status" aria-live="polite"></p>
             <svg class="chart" id="pressureChart" role="img" aria-labelledby="pressureChartTitle" aria-describedby="chartHelp pressureReadout" tabindex="0"></svg>
-            <div class="chart-readout" id="pressureReadout">Loading pressure…</div>
+            <div class="chart-readout" id="pressureReadout"></div>
           </article>
           <article class="chart-card">
             <header class="chart-heading"><h3 id="humidityChartTitle">Humidity</h3><span class="chart-unit">%</span></header>
@@ -122,7 +122,7 @@
             <p class="plot-window" id="humidityWindow"></p>
             <p class="plot-coverage" id="humidityCoverage" role="status" aria-live="polite"></p>
             <svg class="chart" id="humidityChart" role="img" aria-labelledby="humidityChartTitle" aria-describedby="chartHelp humidityReadout" tabindex="0"></svg>
-            <div class="chart-readout" id="humidityReadout">Loading humidity…</div>
+            <div class="chart-readout" id="humidityReadout"></div>
           </article>
           <article class="chart-card">
             <header class="chart-heading"><h3 id="solarChartTitle">Solar</h3><span class="chart-unit">W/m²</span></header>
@@ -140,7 +140,7 @@
             <p class="plot-window" id="solarWindow"></p>
             <p class="plot-coverage" id="solarCoverage" role="status" aria-live="polite"></p>
             <svg class="chart" id="solarChart" role="img" aria-labelledby="solarChartTitle" aria-describedby="chartHelp solarReadout" tabindex="0"></svg>
-            <div class="chart-readout" id="solarReadout">Loading solar irradiance…</div>
+            <div class="chart-readout" id="solarReadout"></div>
           </article>
         </div>
         <p id="chartHelp" class="visually-hidden">Arrow keys move through hourly readings. Home and End move to the first and last hour. Escape clears the selection.</p>
@@ -190,7 +190,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><span id="footerStation">Station —</span><a href="#observations">Top ↑</a></footer>
+    <footer class="site-footer"><span id="footerStation">Station —</span><a href="#observations" aria-label="Back to top">↑</a></footer>
   </div>
   <noscript><div class="noscript">Enable JavaScript to load the weather observations and forecasts.</div></noscript>
 </body>
