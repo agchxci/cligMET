@@ -3,7 +3,7 @@
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const HOUR = 3600000;
-  const COLOURS = { ink: '#111111', muted: '#5c5c5c', grid: '#d8d8d8', forecast: '#111111', archived: '#6a6a6a', band: '#d7d7d7', boundary: '#8a8a8a' };
+  const COLOURS = { ink: '#111111', muted: '#5c5c5c', gridMajor: '#b7b7b7', gridMinor: '#e5e5e5', forecast: '#111111', archived: '#6a6a6a', band: '#d7d7d7', boundary: '#666666' };
   const $ = id => document.getElementById(id);
   const number = value => {
     if (typeof value !== 'number' && typeof value !== 'string') return null;
@@ -195,20 +195,28 @@
   function drawTimeTicks(svg, domain, plot, x) {
     const targetCount = Math.max(2, Math.floor(plot.width / 88));
     const step = Math.max(1, Math.ceil((domain.end - domain.start) / HOUR / targetCount)) * HOUR;
-    // Epoch-based ticks keep a consistent real-time scale through clock changes.
+    const minorStep = step / 4;
+    // Quarter-step minor divisions give the plots a dense instrument grid without adding more labels.
+    for (let stamp = Math.ceil(domain.start / minorStep) * minorStep; stamp <= domain.end; stamp += minorStep) {
+      const isMajor = Math.abs(stamp / step - Math.round(stamp / step)) < 1e-7;
+      if (isMajor) continue;
+      const xx = x(stamp);
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMinor, 'stroke-width': .6 }));
+    }
+    // Epoch-based major ticks keep a consistent real-time scale through clock changes.
     const ticks = [];
     for (let stamp = Math.ceil(domain.start / step) * step; stamp <= domain.end; stamp += step) ticks.push(stamp);
     if (!ticks.length) ticks.push(domain.start);
     ticks.forEach(stamp => {
       const xx = x(stamp);
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.grid, 'stroke-width': 1 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': 1 }));
       const anchor = xx < plot.left + 24 ? 'start' : xx > plot.right - 24 ? 'end' : 'middle';
-      const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 12 });
+      const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 11 });
       const longWindow = domain.end - domain.start > 8 * 24 * HOUR;
       label.append(svgElement('tspan', { x: xx }, longWindow
         ? new Date(stamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
         : new Date(stamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })));
-      label.append(svgElement('tspan', { x: xx, dy: 17 }, longWindow
+      label.append(svgElement('tspan', { x: xx, dy: 16 }, longWindow
         ? String(new Date(stamp).getFullYear())
         : new Date(stamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })));
       svg.append(label);
@@ -282,12 +290,16 @@
     const x = stamp => plot.left + (stamp - domain.start) / (domain.end - domain.start || 1) * plot.width;
     const y = value => plot.top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (plot.bottom - plot.top);
     const forecastX = Math.max(plot.left, Math.min(plot.right, x(domain.boundary)));
-    for (let i = 0; i <= 4; i++) {
-      const value = bounds.low + (bounds.high - bounds.low) * i / 4;
+    const horizontalDivisions = 12;
+    for (let i = 0; i <= horizontalDivisions; i++) {
+      const value = bounds.low + (bounds.high - bounds.low) * i / horizontalDivisions;
       const yy = y(value);
-      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: COLOURS.grid, 'stroke-width': 1 }));
-      const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
-      svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 12 }, format(value, digits)));
+      const major = i % 3 === 0;
+      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+      if (major) {
+        const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
+        svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 11 }, format(value, digits)));
+      }
     }
     drawTimeTicks(svg, domain, plot, x);
     const defs = svgElement('defs');
@@ -309,8 +321,8 @@
       });
     });
     svg.append(lines);
-    if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: COLOURS.boundary, 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
-    if (plot.right - forecastX > 57) svg.append(svgElement('text', { x: Math.min(forecastX + 6, plot.right - 57), y: 15, fill: COLOURS.forecast, 'font-size': 12 }, 'Forecast'));
+    if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: COLOURS.boundary, 'stroke-width': 1.2, 'stroke-dasharray': '2 3' }));
+    if (plot.right - forecastX > 48) svg.append(svgElement('text', { x: Math.min(forecastX + 6, plot.right - 48), y: 15, fill: COLOURS.muted, 'font-size': 10, 'letter-spacing': 1.1 }, 'FCST'));
     const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true' });
     const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
     guide.append(guideLine);
@@ -400,10 +412,18 @@
     const left = 58, right = width - 15, top = 25, bottom = height - 44;
     const x = stamp => left + (stamp - view.start) / (view.end - view.start || 1) * (right - left);
     const y = value => top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (bottom - top);
-    for (let i = 0; i <= 4; i++) {
-      const value = bounds.low + (bounds.high - bounds.low) * i / 4;
-      svg.append(svgElement('line', { x1: left, x2: right, y1: y(value), y2: y(value), stroke: COLOURS.grid }));
-      svg.append(svgElement('text', { x: left - 8, y: y(value) + 4, 'text-anchor': 'end', 'font-size': 12, fill: COLOURS.muted }, `${format(value, definition.digits)}${definition.unit === '%' ? '%' : ''}`));
+    for (let i = 0; i <= 8; i++) {
+      const xx = left + (right - left) * i / 8;
+      const major = i % 2 === 0;
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: top, y2: bottom, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+    }
+    const coefficientHorizontalDivisions = 12;
+    for (let i = 0; i <= coefficientHorizontalDivisions; i++) {
+      const value = bounds.low + (bounds.high - bounds.low) * i / coefficientHorizontalDivisions;
+      const yy = y(value);
+      const major = i % 3 === 0;
+      svg.append(svgElement('line', { x1: left, x2: right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+      if (major) svg.append(svgElement('text', { x: left - 8, y: yy + 4, 'text-anchor': 'end', 'font-size': 11, fill: COLOURS.muted }, `${format(value, definition.digits)}${definition.unit === '%' ? '%' : ''}`));
     }
     // Coefficients stay constant between saved changes, so use a step line.
     const path = history.map((point, index) => index ? `H${x(point.t)} V${y(point.value)}` : `M${x(point.t)},${y(point.value)}`).join(' ');
