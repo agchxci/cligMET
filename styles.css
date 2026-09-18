@@ -1433,3 +1433,50 @@ body { background: var(--page); }
   }
   .model-details { width: 100%; margin-top: 54px; }
 }
+
+
+/* Editorial push IIIb — reduce utility language to marks and IDs. */
+.register-label { display: none !important; }
+
+.overview-heading {
+  justify-content: flex-start;
+  gap: 18px;
+}
+.overview-heading .status-badge {
+  align-self: flex-end;
+  margin-bottom: .35em;
+}
+
+.masthead-meta .refresh-button {
+  position: relative;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  min-height: 22px;
+  margin-top: 7px;
+  padding: 0;
+}
+.masthead-meta .refresh-button::after {
+  content: "↻";
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1;
+}
+.masthead-meta .refresh-button #refreshLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.site-footer a[aria-label="Back to top"] {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  text-decoration: none;
+}
