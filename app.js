@@ -313,7 +313,17 @@
     });
     svg.append(lines);
     if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: COLOURS.boundary, 'stroke-width': 1.2, 'stroke-dasharray': '2 3' }));
-    if (plot.right - forecastX > 48) svg.append(svgElement('text', { x: Math.min(forecastX + 6, plot.right - 48), y: 15, fill: COLOURS.muted, 'font-size': 10, 'letter-spacing': 1.1 }, 'FCST'));
+    if (definition.key === 'temperature' && plot.right - forecastX > 34) {
+      const labelX = Math.min(forecastX + 10, plot.right - 12);
+      const labelY = plot.top + 7;
+      svg.append(svgElement('text', {
+        x: labelX, y: labelY,
+        fill: COLOURS.muted,
+        'font-size': 9,
+        'letter-spacing': 1.2,
+        transform: `rotate(90 ${labelX} ${labelY})`
+      }, 'FCST'));
+    }
     const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true' });
     const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
     guide.append(guideLine);
@@ -346,8 +356,9 @@
       const point = item.points.find(candidate => candidate.t === selectedTime && candidate.value !== null);
       if (!point) return;
       const count = number(point.source?.sample_counts?.[definition.key]);
-      const coverage = item.label === 'Measured' && item.interval > 1 && count !== null ? ` (${count}/${item.interval} hours)` : '';
-      const phrase = `${item.label}: ${format(point.value, definition.digits)} ${definition.unit}${coverage}`;
+      const shortLabel = item.label === 'Measured' ? 'OBS' : item.label === 'Forecast' ? 'FCST' : 'ARCH';
+      const coverage = item.label === 'Measured' && item.interval > 1 && count !== null ? ` ${count}/${item.interval}H` : '';
+      const phrase = `${shortLabel} ${format(point.value, definition.digits)}${definition.unit}${coverage}`;
       parts.push(phrase);
       const element = document.createElement('span');
       element.textContent = phrase;
@@ -357,7 +368,7 @@
     if (useBand) {
       const point = forecast.find(candidate => candidate.t === selectedTime);
       if (point && number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null && Number(point.source.temperature_lower) <= Number(point.source.temperature_upper)) {
-        const phrase = `Range: ${format(point.source.temperature_lower)}–${format(point.source.temperature_upper)} °C`;
+        const phrase = `RNG ${format(point.source.temperature_lower)}–${format(point.source.temperature_upper)}°C`;
         parts.push(phrase);
         const element = document.createElement('span');
         element.textContent = phrase;
