@@ -905,3 +905,195 @@ body { background: var(--page); }
 @media (max-width: 620px) {
   .masthead-meta .refresh-button { justify-self: start; }
 }
+
+
+/* Editorial asymmetry pass — stronger scale contrast, fewer rules, less dashboard symmetry. */
+.masthead {
+  padding-top: 10px;
+  padding-bottom: 14px;
+  border-bottom-width: 4px;
+  overflow: hidden;
+}
+.wordmark {
+  margin-left: -.055em;
+  margin-top: -.08em;
+  font-size: clamp(7.5rem, 16vw, 15rem);
+  line-height: .68;
+  letter-spacing: -.105em;
+}
+.masthead-meta {
+  padding-bottom: 6px;
+  font-size: .625rem;
+}
+.masthead-meta .eyebrow { display: none; }
+.masthead-meta .refresh-button {
+  margin-top: 4px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Remove explanatory micro-headings; section names and numbers do the work. */
+.section-heading .eyebrow { display: none !important; }
+.register-label span:last-child { display: none; }
+
+/* Section numbers become graphic objects rather than navigation markers. */
+.observations, .weather-section, .calibration-section { padding-top: 76px; }
+.observations::before, .weather-section::before, .calibration-section::before {
+  top: 50px;
+  font-size: clamp(4.5rem, 8vw, 7.5rem);
+  line-height: .75;
+  letter-spacing: -.09em;
+  font-weight: 700;
+}
+.section-heading {
+  padding-left: clamp(76px, 9vw, 126px);
+  margin-bottom: 18px;
+}
+.section-heading h1,
+.section-heading h2,
+.overview-heading h1 {
+  font-size: clamp(2.8rem, 5.5vw, 5.5rem);
+  line-height: .86;
+}
+.status-line {
+  margin-left: clamp(76px, 9vw, 126px);
+}
+
+/* One deliberately odd typographic gesture: the main °C unit runs vertically. */
+.large-unit {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin-left: 8px;
+  padding-top: 0;
+  font-size: .8rem;
+  letter-spacing: .08em;
+  align-self: flex-start;
+}
+
+/* Fewer internal rules; larger differences in scale do the separating. */
+.measurement-matrix {
+  border-top-width: 3px;
+  gap: 6px 34px;
+}
+.measurement-row {
+  min-height: 70px;
+  border-bottom: 0;
+  padding: 9px 0;
+}
+.measurement-name { font-size: .625rem; }
+.measurement-value {
+  font-size: clamp(2.7rem, 4.4vw, 4.8rem);
+  line-height: .74;
+}
+
+/* Break the dashboard grid. */
+.charts-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 48px 24px;
+  align-items: start;
+}
+.chart-card:nth-child(1) { grid-column: 1 / -1; }
+.chart-card:nth-child(2) { grid-column: 1 / span 7; }
+.chart-card:nth-child(3) { grid-column: 8 / -1; }
+.chart-card:nth-child(4) { grid-column: 3 / span 8; }
+
+.chart-card:nth-child(1) .chart { height: 390px; }
+.chart-card:nth-child(2) .chart,
+.chart-card:nth-child(3) .chart { height: 285px; }
+.chart-card:nth-child(4) .chart { height: 260px; }
+
+.chart-heading {
+  min-height: 38px;
+  border-bottom-width: 3px;
+}
+.chart-heading h3 {
+  font-size: clamp(1.4rem, 2vw, 2.1rem);
+  line-height: .9;
+}
+.chart-unit {
+  align-self: end;
+  padding-bottom: 2px;
+}
+
+/* Controls should feel typeset, not widget-like. */
+.period-strip { gap: 12px; }
+.period-button,
+.plot-page-buttons .button {
+  font-size: .625rem;
+}
+.plot-navigation {
+  margin-top: 4px;
+  margin-bottom: 1px;
+}
+.plot-window {
+  margin-top: 0;
+  font-size: .6rem;
+}
+
+/* Calibration: let the four figures lead; everything else is secondary. */
+.calibration-section .section-intro,
+.calibration-section .mode-badge { display: none !important; }
+.performance-grid {
+  border-top-width: 3px;
+  gap: 0 22px;
+}
+.performance-metric,
+.performance-metric + .performance-metric {
+  border-bottom: 0;
+  padding-top: 14px;
+  padding-bottom: 8px;
+}
+.performance-metric h3 {
+  font-size: .625rem;
+  margin-bottom: 10px;
+}
+.performance-value {
+  font-size: clamp(3.2rem, 5.8vw, 6rem);
+  line-height: .78;
+}
+.model-details {
+  margin-top: 36px;
+  border-top-width: 3px;
+}
+.model-details summary {
+  width: fit-content;
+  padding: 8px 0;
+  font-size: .625rem;
+  letter-spacing: .04em;
+}
+.model-details[open] summary { border-bottom: 0; }
+.summary-symbol { display: none; }
+
+/* Match the stronger editorial rules elsewhere. */
+.site-footer { border-top-width: 3px; }
+
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-card:nth-child(1),
+  .chart-card:nth-child(2),
+  .chart-card:nth-child(3),
+  .chart-card:nth-child(4) { grid-column: 1; }
+  .chart-card:nth-child(1) .chart { height: 330px; }
+  .chart-card:nth-child(2) .chart,
+  .chart-card:nth-child(3) .chart,
+  .chart-card:nth-child(4) .chart { height: 275px; }
+}
+
+@media (max-width: 620px) {
+  .masthead { overflow: visible; padding-top: 18px; }
+  .wordmark {
+    font-size: clamp(6rem, 28vw, 9rem);
+    margin-left: -.04em;
+  }
+  .observations, .weather-section, .calibration-section { padding-top: 58px; }
+  .observations::before, .weather-section::before, .calibration-section::before {
+    top: 42px;
+    font-size: 3.8rem;
+  }
+  .section-heading { padding-left: 54px; }
+  .status-line { margin-left: 54px; }
+  .charts-grid { margin-left: 0; }
+  .chart-toolbar { margin-left: 0; }
+  .performance-grid,
+  .model-details { margin-left: 0; }
+}
