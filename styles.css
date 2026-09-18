@@ -380,3 +380,88 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
   .period-button { padding-inline: 5px; font-size: .625rem; }
   .chart-card { padding-inline: 8px; }
 }
+
+
+/* Quieter refinement: preserve the technical character with less visual noise. */
+:root {
+  --page: #ececea;
+  --muted: #666663;
+  --line: #cececa;
+  --panel: #ffffff;
+}
+
+.technical-meta { display: none; }
+.overview-heading .eyebrow { display: none; }
+.chart-guidance { display: none; }
+
+.masthead { padding-top: 26px; padding-bottom: 20px; border-bottom-color: #a8a8a4; }
+.wordmark { font-size: clamp(3.8rem, 6.8vw, 6.2rem); }
+.navigation { border-bottom-color: #d1d1cd; }
+.nav-links { text-transform: none; letter-spacing: 0; }
+
+.status-badge { font-weight: 600; letter-spacing: .03em; }
+.status-badge::before { font-size: .7em; margin-right: 6px; }
+.status-line { color: #777773; }
+
+.current-panel { border-color: #bdbdb9; }
+.primary-reading { border-right-color: #d4d4d0; }
+.register-label { letter-spacing: .04em; }
+.register-label span:last-child { display: none; }
+.measurement-row {
+  grid-template-columns: minmax(165px, 1fr) 92px 62px;
+  border-bottom-color: #e0e0dc;
+  min-height: 42px;
+}
+.measurement-code { display: none; }
+.measurement-name { padding-left: 16px; }
+.measurement-value { font-weight: 600; }
+
+.weather-section, .calibration-section { margin-top: 44px; }
+.section-heading h2 { font-size: 1.55rem; }
+.charts-grid { gap: 14px; }
+.chart-card {
+  border-color: #d0d0cc;
+  padding: 14px 14px 0;
+}
+.chart-heading h3 { letter-spacing: .025em; text-transform: none; }
+.chart { border-color: #ddddda; }
+.period-strip { border-color: #c8c8c4; }
+.period-button {
+  border-right-color: #ddddda;
+  color: #5e5e5b;
+}
+.period-button:hover { background: #f2f2ef; }
+.period-button[aria-pressed="true"] { background: #222; color: #fff; }
+.plot-page-buttons { border-color: #c8c8c4; }
+.plot-page-buttons .button { border-right-color: #ddddda; }
+.plot-window, .plot-coverage, .chart-readout { color: #70706d; }
+
+.series-options { gap: 0 18px; }
+.series-options label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: .75rem;
+}
+.series-options input { width: 14px; height: 14px; }
+.legend-line { width: 17px; }
+.legend-band { width: 17px; background: #e6e6e3; border-color: #cdcdc9; }
+
+.mode-badge {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .75rem;
+}
+.performance-grid { border-color: #c9c9c5; }
+.performance-metric + .performance-metric { border-left-color: #ddddda; }
+.model-details { border-color: #c9c9c5; background: #fff; }
+.coefficient-chart { border-color: #ddddda; }
+
+@media (max-width: 780px) {
+  .primary-reading { border-right: 0; border-bottom-color: #d4d4d0; }
+  .measurement-row { grid-template-columns: minmax(135px, 1fr) 76px 58px; }
+}
+@media (max-width: 540px) {
+  .measurement-row { grid-template-columns: minmax(118px, 1fr) 68px 50px; }
+}

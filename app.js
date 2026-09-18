@@ -3,7 +3,7 @@
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const HOUR = 3600000;
-  const COLOURS = { ink: '#111111', muted: '#5c5c5c', gridMajor: '#b7b7b7', gridMinor: '#e5e5e5', forecast: '#111111', archived: '#6a6a6a', band: '#d7d7d7', boundary: '#666666' };
+  const COLOURS = { ink: '#111111', muted: '#666666', gridMajor: '#d0d0cd', gridMinor: '#eeeeeb', forecast: '#111111', archived: '#777777', band: '#e2e2df', boundary: '#888888' };
   const $ = id => document.getElementById(id);
   const number = value => {
     if (typeof value !== 'number' && typeof value !== 'string') return null;
@@ -199,15 +199,13 @@
   function drawTimeTicks(svg, domain, plot, x) {
     const targetCount = Math.max(2, Math.floor(plot.width / 88));
     const step = Math.max(1, Math.ceil((domain.end - domain.start) / HOUR / targetCount)) * HOUR;
-    const minorStep = step / 4;
-    // Quarter-step minor divisions give the plots a dense instrument grid without adding more labels.
+    const minorStep = step / 2;
+    // One quiet minor division between labelled time ticks keeps the technical grid without visual overload.
     for (let stamp = Math.ceil(domain.start / minorStep) * minorStep; stamp <= domain.end; stamp += minorStep) {
       const isMajor = Math.abs(stamp / step - Math.round(stamp / step)) < 1e-7;
       if (isMajor) continue;
       const xx = x(stamp);
       svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMinor, 'stroke-width': .5 }));
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.top + 3, stroke: COLOURS.gridMajor, 'stroke-width': .7 }));
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.bottom - 3, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .7 }));
     }
     // Epoch-based major ticks keep a consistent real-time scale through clock changes.
     const ticks = [];
@@ -215,9 +213,7 @@
     if (!ticks.length) ticks.push(domain.start);
     ticks.forEach(stamp => {
       const xx = x(stamp);
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .9 }));
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.top + 5, stroke: COLOURS.ink, 'stroke-width': .8 }));
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.bottom - 5, y2: plot.bottom, stroke: COLOURS.ink, 'stroke-width': .8 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .8 }));
       const anchor = xx < plot.left + 24 ? 'start' : xx > plot.right - 24 ? 'end' : 'middle';
       const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 11 });
       const longWindow = domain.end - domain.start > 8 * 24 * HOUR;
@@ -298,15 +294,12 @@
     const x = stamp => plot.left + (stamp - domain.start) / (domain.end - domain.start || 1) * plot.width;
     const y = value => plot.top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (plot.bottom - plot.top);
     const forecastX = Math.max(plot.left, Math.min(plot.right, x(domain.boundary)));
-    const horizontalDivisions = 12;
+    const horizontalDivisions = 8;
     for (let i = 0; i <= horizontalDivisions; i++) {
       const value = bounds.low + (bounds.high - bounds.low) * i / horizontalDivisions;
       const yy = y(value);
-      const major = i % 3 === 0;
-      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .9 : .5 }));
-      const tick = major ? 5 : 3;
-      svg.append(svgElement('line', { x1: plot.left, x2: plot.left + tick, y1: yy, y2: yy, stroke: major ? COLOURS.ink : COLOURS.gridMajor, 'stroke-width': .7 }));
-      svg.append(svgElement('line', { x1: plot.right - tick, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.ink : COLOURS.gridMajor, 'stroke-width': .7 }));
+      const major = i % 2 === 0;
+      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .8 : .5 }));
       if (major) {
         const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
         svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 11 }, format(value, digits)));
@@ -423,17 +416,17 @@
     const left = 58, right = width - 15, top = 25, bottom = height - 44;
     const x = stamp => left + (stamp - view.start) / (view.end - view.start || 1) * (right - left);
     const y = value => top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (bottom - top);
-    for (let i = 0; i <= 8; i++) {
-      const xx = left + (right - left) * i / 8;
+    for (let i = 0; i <= 6; i++) {
+      const xx = left + (right - left) * i / 6;
       const major = i % 2 === 0;
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: top, y2: bottom, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: top, y2: bottom, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .8 : .5 }));
     }
-    const coefficientHorizontalDivisions = 12;
+    const coefficientHorizontalDivisions = 8;
     for (let i = 0; i <= coefficientHorizontalDivisions; i++) {
       const value = bounds.low + (bounds.high - bounds.low) * i / coefficientHorizontalDivisions;
       const yy = y(value);
-      const major = i % 3 === 0;
-      svg.append(svgElement('line', { x1: left, x2: right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+      const major = i % 2 === 0;
+      svg.append(svgElement('line', { x1: left, x2: right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .8 : .5 }));
       if (major) svg.append(svgElement('text', { x: left - 8, y: yy + 4, 'text-anchor': 'end', 'font-size': 11, fill: COLOURS.muted }, `${format(value, definition.digits)}${definition.unit === '%' ? '%' : ''}`));
     }
     // Coefficients stay constant between saved changes, so use a step line.
