@@ -883,3 +883,14 @@ body { background: var(--page); }
 .chart-footnotes { display: none; }
 .plot-coverage:not([data-state="limited"]):not([data-state="error"]) { display: none; }
 .chart-readout:empty { display: none; }
+
+
+/* Minimal-copy pass. */
+.status-line:empty,
+.section-intro:empty,
+.performance-metric p,
+.calibration-note,
+#coefficientDescription,
+.site-footer p { display: none; }
+.section-intro { margin-bottom: 10px; }
+.plot-window { color: var(--muted); }
