@@ -894,3 +894,14 @@ body { background: var(--page); }
 .site-footer p { display: none; }
 .section-intro { margin-bottom: 10px; }
 .plot-window { color: var(--muted); }
+
+
+/* Remove section menu; keep refresh as quiet masthead utility. */
+.masthead-meta .refresh-button {
+  justify-self: end;
+  margin-top: 6px;
+  font-size: .6875rem;
+}
+@media (max-width: 620px) {
+  .masthead-meta .refresh-button { justify-self: start; }
+}
