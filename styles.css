@@ -1480,3 +1480,444 @@ body { background: var(--page); }
   font-size: 1rem;
   text-decoration: none;
 }
+
+
+/* Poster-system leap — one continuous meteorological sheet. */
+
+/* 01: live temperature becomes part of the masthead composition. */
+.masthead {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .72fr) minmax(145px, .28fr);
+  gap: clamp(22px, 4vw, 62px);
+  align-items: end;
+  min-height: min(42vw, 470px);
+  padding: 0 0 18px;
+  border-bottom: 0;
+  overflow: visible;
+}
+.wordmark {
+  align-self: start;
+  margin-top: -.055em;
+  margin-left: -.075em;
+  font-size: clamp(9rem, 18vw, 17rem);
+  line-height: .64;
+  letter-spacing: -.115em;
+  white-space: nowrap;
+}
+.masthead-live {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+  padding: 18px 0 0;
+  border-top: 5px solid var(--ink);
+}
+.masthead-live-kicker {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: .575rem;
+  letter-spacing: .07em;
+}
+.masthead-live-kicker span:first-child {
+  font-family: var(--font-display);
+  font-size: clamp(2.7rem, 4.8vw, 5rem);
+  line-height: .72;
+  letter-spacing: -.08em;
+}
+.masthead-temperature {
+  margin: auto 0 0;
+  align-items: flex-start;
+}
+.masthead-temperature > span:first-child {
+  font-size: clamp(8.5rem, 14vw, 14rem);
+  line-height: .67;
+  letter-spacing: -.105em;
+}
+.masthead-temperature .large-unit {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 3px 0 0 8px;
+  font-size: .72rem;
+}
+.masthead-live-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 7px;
+  border-top: 1px solid var(--ink);
+}
+.masthead-live .reading-time {
+  margin: 0;
+  font-size: .6rem;
+}
+.masthead-live .status-badge {
+  margin: 0;
+  font-size: .6rem;
+}
+.masthead-live .status-line {
+  margin: 5px 0 0;
+  min-height: 0;
+  font-size: .575rem;
+}
+.masthead-meta {
+  align-self: end;
+  padding: 0 0 2px;
+  border-top: 1px solid var(--ink);
+  padding-top: 7px;
+}
+
+/* Current-condition field flows directly out of the masthead. */
+.observations {
+  padding-top: 30px;
+}
+.observations::before,
+.weather-section::before,
+.calibration-section::before {
+  content: none !important;
+}
+.current-panel {
+  display: block;
+  padding: 0;
+}
+.primary-reading { display: none; }
+.measurement-matrix {
+  width: min(88%, 1180px);
+  margin-left: auto;
+  padding-left: clamp(0px, 4vw, 60px);
+}
+
+/* Explicit registration marks replace section headings. */
+.section-register {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 18px;
+  padding-bottom: 7px;
+  border-bottom: 4px solid var(--ink);
+}
+.section-number {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 9vw, 9rem);
+  font-weight: 700;
+  line-height: .67;
+  letter-spacing: -.1em;
+}
+.weather-section .section-number {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--ink);
+}
+.section-ref {
+  padding-bottom: 3px;
+  font-size: .575rem;
+  letter-spacing: .08em;
+}
+
+/* 02: Temperature is a publishing plate rather than another card. */
+.weather-section {
+  padding-top: 104px;
+}
+.chart-toolbar {
+  margin: 0 0 20px;
+  padding: 0;
+}
+.charts-grid {
+  margin-left: 0;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 64px 24px;
+}
+.chart-card:nth-child(1) {
+  grid-column: 1 / -1;
+  position: relative;
+  margin-inline: calc(clamp(18px, 4vw, 58px) * -1);
+  padding: 26px clamp(18px, 4vw, 58px) 18px;
+  background: #fff;
+}
+.chart-card:nth-child(1)::before {
+  content: "CLG/02.1/A";
+  position: absolute;
+  top: 9px;
+  right: clamp(18px, 4vw, 58px);
+  font-size: .55rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.chart-card:nth-child(1) .chart-heading {
+  border-bottom: 0;
+  padding: 0;
+  margin: 0 0 -8px;
+}
+.chart-card:nth-child(1) .chart-heading h3 {
+  font-size: clamp(4.6rem, 9vw, 9rem);
+  line-height: .66;
+  letter-spacing: -.095em;
+  transform: translateY(20px);
+  position: relative;
+  z-index: 2;
+}
+.chart-card:nth-child(1) .chart-unit {
+  padding-bottom: 1px;
+  font-size: .6rem;
+}
+.chart-card:nth-child(1) .plot-navigation {
+  position: relative;
+  z-index: 3;
+  justify-content: flex-end;
+  margin: 18px 0 3px;
+}
+.chart-card:nth-child(1) .plot-window {
+  text-align: right;
+  margin-bottom: 5px;
+}
+.chart-card:nth-child(1) .chart {
+  height: 430px;
+  background: #fff;
+}
+.chart-card:nth-child(1) .chart-readout {
+  text-align: right;
+}
+
+/* Supporting charts are intentionally different fragments. */
+.chart-card:nth-child(2) {
+  grid-column: 1 / span 8;
+  margin-top: 0;
+}
+.chart-card:nth-child(2) .chart {
+  height: 210px;
+}
+.chart-card:nth-child(2) .chart-heading {
+  border-bottom: 4px solid var(--ink);
+}
+.chart-card:nth-child(3) {
+  grid-column: 9 / -1;
+  margin-top: 112px;
+}
+.chart-card:nth-child(3) .chart {
+  height: 360px;
+}
+.chart-card:nth-child(3) .chart-heading {
+  border: 0;
+  border-left: 3px solid var(--ink);
+  padding: 0 0 0 10px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.chart-card:nth-child(3) .plot-navigation {
+  align-items: flex-start;
+  flex-direction: column;
+}
+.chart-card:nth-child(4) {
+  grid-column: 3 / span 8;
+  margin-top: 20px;
+}
+.chart-card:nth-child(4)::before {
+  content: "CLG/02.4";
+  display: block;
+  margin-bottom: 5px;
+  font-size: .55rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.chart-card:nth-child(4) .chart {
+  height: 175px;
+}
+.chart-card:nth-child(4) .chart-heading {
+  border-bottom: 1px solid var(--ink);
+}
+
+/* 03: calibration becomes statistical end-matter. */
+.calibration-section {
+  position: relative;
+  padding-top: 118px;
+  min-height: 680px;
+}
+.calibration-register {
+  width: min(74%, 980px);
+  margin-left: auto;
+  border-bottom-width: 1px;
+}
+.calibration-section .mode-badge,
+.calibration-section .section-intro {
+  display: none !important;
+}
+.performance-grid {
+  position: relative;
+  min-height: 390px;
+  margin: 0;
+  display: block;
+  border: 0;
+}
+.performance-metric {
+  position: absolute;
+  width: auto;
+  min-width: 160px;
+  padding: 7px 0 0 !important;
+  border: 0 !important;
+  border-top: 2px solid var(--ink) !important;
+}
+.performance-metric:nth-child(1) {
+  left: 2%;
+  top: 72px;
+  width: 15%;
+  margin: 0;
+}
+.performance-metric:nth-child(2) {
+  left: 24%;
+  top: 0;
+  width: 22%;
+  border-top-width: 5px !important;
+}
+.performance-metric:nth-child(3) {
+  left: 49%;
+  top: 126px;
+  width: 22%;
+  margin: 0;
+  border-top-width: 1px !important;
+}
+.performance-metric:nth-child(4) {
+  right: 0;
+  top: 25px;
+  width: 26%;
+  margin: 0;
+  border-top-width: 6px !important;
+}
+.performance-metric:nth-child(4) .performance-value {
+  font-size: clamp(5rem, 9vw, 9rem);
+}
+.performance-metric h3 {
+  margin-bottom: 8px;
+  font-size: .575rem;
+}
+.model-details {
+  width: min(54%, 740px);
+  margin: 18px 0 0 auto;
+  border-top: 1px solid var(--ink);
+}
+.model-details::before {
+  content: "CLG/03.2";
+  display: block;
+  padding-top: 6px;
+  font-size: .55rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+
+/* Folio-like registration details. */
+.site-footer::before {
+  content: "CLG/MET · PUBLIC SHEET";
+  font-size: .525rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.site-footer {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 20px;
+}
+
+/* Desktop gets the radical composition; smaller screens return to a calm reading order. */
+@media (max-width: 1050px) {
+  .masthead {
+    grid-template-columns: 1fr minmax(240px, .55fr);
+    min-height: 0;
+  }
+  .wordmark { grid-column: 1 / -1; }
+  .masthead-live { grid-column: 1; min-height: 300px; }
+  .masthead-meta { grid-column: 2; }
+  .measurement-matrix { width: 100%; padding-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .weather-section { padding-top: 80px; }
+  .chart-card:nth-child(1) {
+    margin-inline: 0;
+    padding-inline: 18px;
+  }
+  .chart-card:nth-child(2),
+  .chart-card:nth-child(3),
+  .chart-card:nth-child(4) {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+  .chart-card:nth-child(2) .chart,
+  .chart-card:nth-child(3) .chart,
+  .chart-card:nth-child(4) .chart {
+    height: 260px;
+  }
+  .chart-card:nth-child(3) .plot-navigation {
+    flex-direction: row;
+    align-items: baseline;
+  }
+  .performance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+    gap: 28px 22px;
+  }
+  .performance-metric,
+  .performance-metric:nth-child(1),
+  .performance-metric:nth-child(2),
+  .performance-metric:nth-child(3),
+  .performance-metric:nth-child(4) {
+    position: static;
+    width: auto;
+    margin: 0;
+  }
+  .model-details,
+  .calibration-register {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .masthead {
+    display: block;
+    padding-top: 14px;
+  }
+  .wordmark {
+    display: block;
+    font-size: clamp(6.8rem, 31vw, 10rem);
+    margin-bottom: 34px;
+  }
+  .masthead-live {
+    min-height: 260px;
+    margin-bottom: 32px;
+  }
+  .masthead-temperature > span:first-child {
+    font-size: clamp(7rem, 33vw, 11rem);
+  }
+  .masthead-meta {
+    text-align: left;
+    justify-items: start;
+    width: 100%;
+  }
+  .observations { padding-top: 26px; }
+  .section-register { margin-bottom: 14px; }
+  .section-number { font-size: 4.3rem; }
+  .chart-card:nth-child(1) .chart-heading h3 {
+    font-size: clamp(3.4rem, 18vw, 5.3rem);
+    transform: translateY(12px);
+  }
+  .chart-card:nth-child(1) .chart { height: 320px; }
+  .performance-grid { grid-template-columns: 1fr; }
+  .performance-metric:nth-child(4) .performance-value {
+    font-size: clamp(4rem, 21vw, 6.8rem);
+  }
+  .site-footer {
+    grid-template-columns: 1fr auto;
+  }
+  .site-footer::before { grid-column: 1 / -1; }
+}
