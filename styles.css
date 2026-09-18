@@ -1921,3 +1921,383 @@ body { background: var(--page); }
   }
   .site-footer::before { grid-column: 1 / -1; }
 }
+
+
+/* Connected editorial system — keep the character, restore one visual spine. */
+
+/* Masthead returns to one clear object. */
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  min-height: 0;
+  gap: 28px;
+  padding: 14px 0 18px;
+  border-bottom: 4px solid var(--ink);
+  overflow: hidden;
+}
+.wordmark {
+  align-self: end;
+  margin: 0 0 -.03em -.06em;
+  font-size: clamp(7.5rem, 15vw, 14rem);
+  line-height: .67;
+  letter-spacing: -.105em;
+}
+.masthead-meta {
+  align-self: end;
+  min-width: 160px;
+  padding: 0 0 2px;
+  border-top: 0;
+  text-align: right;
+  justify-items: end;
+}
+.masthead-live { display: none !important; }
+
+/* All three numbered sections use the same registration system. */
+.observations,
+.weather-section,
+.calibration-section {
+  padding-top: 72px;
+}
+.section-register {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 22px;
+  padding-bottom: 7px;
+  border-bottom: 3px solid var(--ink);
+}
+.current-register { border-bottom-width: 4px; }
+.calibration-register { width: 100%; margin-left: 0; border-bottom-width: 3px; }
+.section-number {
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4.8rem, 8vw, 7.8rem);
+  font-weight: 700;
+  line-height: .68;
+  letter-spacing: -.09em;
+}
+.weather-section .section-number {
+  color: transparent;
+  -webkit-text-stroke: 1.4px var(--ink);
+}
+.section-ref {
+  padding-bottom: 3px;
+  font-size: .575rem;
+  letter-spacing: .08em;
+}
+
+/* 01: one coherent live-data block. */
+.current-panel {
+  display: grid;
+  grid-template-columns: minmax(300px, .9fr) minmax(0, 1.55fr);
+  gap: clamp(38px, 6vw, 88px);
+  align-items: end;
+  padding: 6px 0 0;
+}
+.primary-reading {
+  display: block;
+  position: static;
+  max-width: none;
+}
+.temperature-reading {
+  margin: 0;
+  align-items: flex-start;
+}
+.temperature-reading > span:first-child {
+  font-size: clamp(8rem, 15vw, 13.5rem);
+  line-height: .67;
+  letter-spacing: -.105em;
+}
+.large-unit {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 4px 0 0 8px;
+  font-size: .72rem;
+}
+.primary-reading-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 7px;
+  border-top: 1px solid var(--ink);
+}
+.primary-reading .reading-time,
+.primary-reading .status-badge {
+  margin: 0;
+  font-size: .6rem;
+}
+.primary-reading .status-line {
+  margin: 5px 0 0;
+  min-height: 0;
+  font-size: .575rem;
+}
+.measurement-matrix {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 26px 20px;
+  align-items: end;
+  border-top: 0;
+}
+.measurement-row,
+.measurement-row:nth-child(1),
+.measurement-row:nth-child(2),
+.measurement-row:nth-child(3),
+.measurement-row:nth-child(4),
+.measurement-row:nth-child(5),
+.measurement-row:nth-child(6) {
+  grid-column: span 2;
+  margin: 0;
+  padding: 9px 0 0;
+  border: 0;
+  border-top: 1px solid var(--ink);
+  transform: none !important;
+}
+.measurement-row:nth-child(2) { border-top-width: 4px; }
+.measurement-row:nth-child(6) { border-top-width: 2px; }
+.measurement-row:nth-child(2) .measurement-value {
+  font-size: clamp(4rem, 6vw, 6.4rem);
+}
+.measurement-row:nth-child(1) .measurement-value,
+.measurement-row:nth-child(4) .measurement-value,
+.measurement-row:nth-child(6) .measurement-value {
+  font-size: clamp(2.5rem, 3.8vw, 4.1rem);
+}
+.measurement-row:nth-child(3) .measurement-value,
+.measurement-row:nth-child(5) .measurement-value {
+  font-size: clamp(2rem, 3vw, 3.1rem);
+}
+
+/* 02: one chart family, with Temperature clearly dominant. */
+.weather-section { padding-top: 94px; }
+.chart-toolbar {
+  margin: 0 0 18px;
+  padding: 0;
+}
+.charts-grid {
+  margin-left: 0;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 46px 24px;
+  align-items: start;
+}
+.chart-card:nth-child(1) {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.chart-card:nth-child(1)::before { content: none; }
+.chart-card:nth-child(1) .chart-heading {
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 5px solid var(--ink);
+}
+.chart-card:nth-child(1) .chart-heading h3 {
+  font-size: clamp(3.8rem, 7vw, 7rem);
+  line-height: .72;
+  letter-spacing: -.085em;
+  transform: none;
+}
+.chart-card:nth-child(1) .plot-navigation {
+  margin-top: 7px;
+  justify-content: space-between;
+}
+.chart-card:nth-child(1) .plot-window {
+  text-align: left;
+}
+.chart-card:nth-child(1) .chart {
+  height: 390px;
+  background: #fff;
+}
+.chart-card:nth-child(1) .chart-readout {
+  text-align: left;
+}
+.chart-card:nth-child(2) {
+  grid-column: 1 / span 7;
+  margin: 0;
+}
+.chart-card:nth-child(3) {
+  grid-column: 8 / -1;
+  margin: 0;
+}
+.chart-card:nth-child(4) {
+  grid-column: 3 / span 8;
+  margin: 0;
+}
+.chart-card:nth-child(2)::before,
+.chart-card:nth-child(3)::before,
+.chart-card:nth-child(4)::before {
+  content: none;
+}
+.chart-card:nth-child(2) .chart,
+.chart-card:nth-child(3) .chart,
+.chart-card:nth-child(4) .chart {
+  height: 260px;
+  background: transparent;
+}
+.chart-card:nth-child(2) .chart-heading,
+.chart-card:nth-child(3) .chart-heading,
+.chart-card:nth-child(4) .chart-heading {
+  min-height: 34px;
+  padding: 0 0 7px;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  flex-direction: row;
+  align-items: end;
+  justify-content: space-between;
+}
+.chart-card:nth-child(3) .chart-heading h3 {
+  text-align: left;
+}
+.chart-card:nth-child(3) .plot-navigation {
+  flex-direction: row;
+  align-items: baseline;
+}
+.chart-card:nth-child(4) .chart-heading {
+  padding-left: 0;
+  border-bottom-width: 3px;
+}
+
+/* 03: four metrics share one horizontal baseline again. */
+.calibration-section {
+  min-height: 0;
+  padding-top: 96px;
+}
+.calibration-section .mode-badge,
+.calibration-section .section-intro {
+  display: none !important;
+}
+.performance-grid {
+  position: static;
+  display: grid;
+  grid-template-columns: .8fr 1.15fr 1.15fr 1.4fr;
+  gap: 0 24px;
+  min-height: 0;
+  margin: 0;
+  align-items: start;
+}
+.performance-metric,
+.performance-metric:nth-child(1),
+.performance-metric:nth-child(2),
+.performance-metric:nth-child(3),
+.performance-metric:nth-child(4) {
+  position: static;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0 0 !important;
+  border: 0 !important;
+  border-top: 2px solid var(--ink) !important;
+}
+.performance-metric:nth-child(1) { border-top-width: 1px !important; }
+.performance-metric:nth-child(2) { border-top-width: 4px !important; }
+.performance-metric:nth-child(3) { border-top-width: 1px !important; }
+.performance-metric:nth-child(4) { border-top-width: 5px !important; }
+.performance-metric:nth-child(4) .performance-value {
+  font-size: clamp(4.4rem, 7vw, 7rem);
+}
+.model-details {
+  width: min(72%, 920px);
+  margin: 42px 0 0 auto;
+  border-top: 2px solid var(--ink);
+}
+.model-details::before { content: none; }
+
+/* Footer remains the restrained folio line. */
+.site-footer::before {
+  content: "CLG/MET";
+}
+
+/* Responsive: keep the same system, simply reduce the asymmetry. */
+@media (max-width: 1050px) {
+  .masthead {
+    grid-template-columns: 1fr auto;
+  }
+  .wordmark { grid-column: auto; }
+  .current-panel {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+  .measurement-matrix {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-card:nth-child(1),
+  .chart-card:nth-child(2),
+  .chart-card:nth-child(3),
+  .chart-card:nth-child(4) {
+    grid-column: 1;
+  }
+  .chart-card:nth-child(1) .chart {
+    height: 330px;
+  }
+  .chart-card:nth-child(2) .chart,
+  .chart-card:nth-child(3) .chart,
+  .chart-card:nth-child(4) .chart {
+    height: 260px;
+  }
+  .performance-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px 22px;
+  }
+  .model-details { width: 100%; }
+}
+
+@media (max-width: 620px) {
+  .masthead {
+    display: block;
+    padding-top: 16px;
+  }
+  .wordmark {
+    display: block;
+    font-size: clamp(6.4rem, 29vw, 9.4rem);
+    margin-bottom: 28px;
+  }
+  .masthead-meta {
+    width: 100%;
+    text-align: left;
+    justify-items: start;
+  }
+  .observations,
+  .weather-section,
+  .calibration-section {
+    padding-top: 58px;
+  }
+  .section-register {
+    margin-bottom: 16px;
+  }
+  .section-number {
+    font-size: 4.2rem;
+  }
+  .temperature-reading > span:first-child {
+    font-size: clamp(7rem, 32vw, 10.5rem);
+  }
+  .measurement-matrix {
+    grid-template-columns: 1fr;
+  }
+  .measurement-row,
+  .measurement-row:nth-child(1),
+  .measurement-row:nth-child(2),
+  .measurement-row:nth-child(3),
+  .measurement-row:nth-child(4),
+  .measurement-row:nth-child(5),
+  .measurement-row:nth-child(6) {
+    grid-column: 1;
+  }
+  .chart-card:nth-child(1) .chart-heading h3 {
+    font-size: clamp(3.1rem, 16vw, 4.8rem);
+  }
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
