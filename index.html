@@ -68,21 +68,21 @@
 
       <section id="weather" class="weather-section" aria-labelledby="weatherTitle">
         <div class="section-heading">
-          <div><p class="eyebrow">Observations &amp; forecasts</p><h2 id="weatherTitle">The weather, over time.</h2></div>
+          <div><p class="eyebrow">Observations &amp; forecasts</p><h2 id="weatherTitle">Weather</h2></div>
         </div>
         <div class="chart-toolbar">
           <fieldset class="series-options">
             <legend class="visually-hidden">Visible chart series</legend>
             <label><input type="checkbox" id="showMeasured" checked><span class="legend-line observed" aria-hidden="true"></span>Measured</label>
-            <label><input type="checkbox" id="showForecast" checked><span class="legend-line forecast" aria-hidden="true"></span>cligMET forecast</label>
-            <label><input type="checkbox" id="showArchived" checked><span class="legend-line archived" aria-hidden="true"></span>Archived forecast</label>
-            <label><input type="checkbox" id="showRange" checked><span class="legend-band" aria-hidden="true"></span>Temperature range</label>
+            <label><input type="checkbox" id="showForecast" checked><span class="legend-line forecast" aria-hidden="true"></span>Forecast</label>
+            <label><input type="checkbox" id="showArchived" checked><span class="legend-line archived" aria-hidden="true"></span>Archive</label>
+            <label><input type="checkbox" id="showRange" checked><span class="legend-band" aria-hidden="true"></span>Range</label>
           </fieldset>
           <p class="chart-guidance">POINTER / TAP TO INSPECT · ← → WHEN FOCUSED</p>
         </div>
         <div class="charts-grid">
           <article class="chart-card">
-            <header class="chart-heading"><h3 id="temperatureChartTitle">Dry-bulb temperature</h3><span class="chart-unit">°C</span></header>
+            <header class="chart-heading"><h3 id="temperatureChartTitle">Temperature</h3><span class="chart-unit">°C</span></header>
 
             <div class="plot-navigation" id="temperatureNavigation">
               <label class="visually-hidden" for="temperaturePeriod">Temperature period</label>
@@ -100,7 +100,7 @@
             <div class="chart-readout" id="temperatureReadout">Loading temperature…</div>
           </article>
           <article class="chart-card">
-            <header class="chart-heading"><h3 id="pressureChartTitle">Atmospheric pressure</h3><span class="chart-unit">hPa</span></header>
+            <header class="chart-heading"><h3 id="pressureChartTitle">Pressure</h3><span class="chart-unit">hPa</span></header>
 
             <div class="plot-navigation" id="pressureNavigation">
               <label class="visually-hidden" for="pressurePeriod">Pressure period</label>
@@ -118,7 +118,7 @@
             <div class="chart-readout" id="pressureReadout">Loading pressure…</div>
           </article>
           <article class="chart-card">
-            <header class="chart-heading"><h3 id="humidityChartTitle">Relative humidity</h3><span class="chart-unit">%</span></header>
+            <header class="chart-heading"><h3 id="humidityChartTitle">Humidity</h3><span class="chart-unit">%</span></header>
 
             <div class="plot-navigation" id="humidityNavigation">
               <label class="visually-hidden" for="humidityPeriod">Humidity period</label>
@@ -136,7 +136,7 @@
             <div class="chart-readout" id="humidityReadout">Loading humidity…</div>
           </article>
           <article class="chart-card">
-            <header class="chart-heading"><h3 id="solarChartTitle">Solar irradiance</h3><span class="chart-unit">W/m²</span></header>
+            <header class="chart-heading"><h3 id="solarChartTitle">Solar</h3><span class="chart-unit">W/m²</span></header>
 
             <div class="plot-navigation" id="solarNavigation">
               <label class="visually-hidden" for="solarPeriod">Solar irradiance period</label>
@@ -160,17 +160,17 @@
       </section>
 
       <section id="calibration" class="calibration-section" aria-labelledby="calibrationTitle">
-        <div class="section-heading"><div><p class="eyebrow">Model performance</p><h2 id="calibrationTitle">A forecast you can check.</h2></div><span class="mode-badge" id="calibrationMode">Waiting for data</span></div>
+        <div class="section-heading"><div><p class="eyebrow">Model performance</p><h2 id="calibrationTitle">Calibration</h2></div><span class="mode-badge" id="calibrationMode">Waiting for data</span></div>
         <p class="section-intro" id="calibrationStatus">Loading verified forecast results…</p>
         <div class="performance-grid">
-          <article class="performance-metric"><h3>Verified hours</h3><div class="performance-value" id="verifiedHours">—</div><p id="verifiedNote">Unique hours used for verification</p></article>
-          <article class="performance-metric"><h3>cligMET temperature error</h3><div class="performance-value"><span id="cligmetMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
-          <article class="performance-metric"><h3>Open-Meteo temperature error</h3><div class="performance-value"><span id="modelMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
-          <article class="performance-metric improvement-metric"><h3>cligMET improvement</h3><div class="performance-value"><span id="improvement">—</span><span class="unit">°C</span></div><p>Positive means a smaller error</p></article>
+          <article class="performance-metric"><h3>Hours</h3><div class="performance-value" id="verifiedHours">—</div><p id="verifiedNote">Unique hours used for verification</p></article>
+          <article class="performance-metric"><h3>cligMET MAE</h3><div class="performance-value"><span id="cligmetMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
+          <article class="performance-metric"><h3>Open-Meteo MAE</h3><div class="performance-value"><span id="modelMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
+          <article class="performance-metric improvement-metric"><h3>Improvement</h3><div class="performance-value"><span id="improvement">—</span><span class="unit">°C</span></div><p>Positive means a smaller error</p></article>
         </div>
 
         <details class="model-details" id="modelDetails">
-          <summary><span>Model coefficients &amp; history</span><span class="summary-symbol" aria-hidden="true">+</span></summary>
+          <summary><span>Coefficients</span><span class="summary-symbol" aria-hidden="true">+</span></summary>
           <div class="details-content">
             <dl class="coefficients-grid">
               <div><dt>Temperature adjustment</dt><dd id="coefficientTemperature">—</dd></div>
@@ -201,7 +201,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><div><a class="footer-wordmark" href="#">cligMET</a><p>Past. Present. Forecast.</p></div><div class="footer-detail"><span id="footerStation">Local weather observations</span><span>Refreshes every minute while this page is visible</span><a href="#observations">Back to observations ↑</a></div></footer>
+    <footer class="site-footer"><div><a class="footer-wordmark" href="#">cligMET</a></div><div class="footer-detail"><span id="footerStation">Station —</span><a href="#observations">Top ↑</a></div></footer>
   </div>
   <noscript><div class="noscript">Enable JavaScript to load the weather observations and forecasts.</div></noscript>
 </body>
