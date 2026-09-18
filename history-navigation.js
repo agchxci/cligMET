@@ -7,7 +7,7 @@ window.CligmetHistory = (() => {
   const PERIODS = new Set(['day', 'recent', 'week', 'month', 'year', 'forecast', 'all']);
   const numeric = value => value !== null && value !== undefined && value !== '' && typeof value !== 'boolean' && Number.isFinite(Number(value)) ? Number(value) : null;
   const stamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? Date.parse(value) : null;
-  const label = value => new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const label = value => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
   const sequence = value => Array.isArray(value) ? value : [];
 
   function shift(base, period, offset) {
@@ -160,7 +160,7 @@ window.CligmetHistory = (() => {
       document.getElementById(`${id}Previous`).disabled = fixed || (earliest !== null && window.start <= earliest);
       document.getElementById(`${id}Next`).disabled = fixed || selection.offset === 0;
       document.getElementById(`${id}Latest`).disabled = selection.offset === 0;
-      document.getElementById(`${id}Window`).textContent = `${label(window.start)} – ${label(window.end)}${id !== 'coefficient' && selection.offset === 0 && selection.period !== 'forecast' ? ' · includes next 24 h forecast' : ''}`;
+      document.getElementById(`${id}Window`).textContent = `${label(window.start)}–${label(window.end)}`;
     }
 
     function view(id) {
@@ -173,20 +173,19 @@ window.CligmetHistory = (() => {
       const earliest = stamp(availability?.available_from) ?? (fallbackTimes.length ? Math.min(...fallbackTimes) : null);
       controls(id, window, result?.data ? earliest : null);
       const note = document.getElementById(`${id}Coverage`);
-      const averaging = window.interval === 24 ? 'Daily means of available hours (UTC days)' : window.interval === 3 ? '3-hour means of available hours (UTC)' : 'Hourly means';
       note.dataset.state = '';
-      if (window.period === 'forecast') note.textContent = 'Next 24 hours · station-adjusted forecast';
-      else if (pending.has(requestKey(window))) note.textContent = `${averaging} · loading archived observations…`;
+      if (window.period === 'forecast') note.textContent = '';
+      else if (pending.has(requestKey(window))) note.textContent = '';
       else if (result?.failed) {
-        note.textContent = `${averaging} · long-term archive unavailable; showing only the current snapshot’s history.`;
+        note.textContent = 'ARCHIVE UNAVAILABLE';
         note.dataset.state = 'limited';
       } else if (!observationPoints.length) {
-        note.textContent = `${averaging} · no observations saved for this period.${earliest !== null ? ` Archive starts ${label(earliest)}.` : ''}`;
+        note.textContent = earliest !== null ? `NO DATA · FROM ${label(earliest)}` : 'NO DATA';
         note.dataset.state = 'limited';
       } else if (earliest !== null && earliest > window.start) {
-        note.textContent = `${averaging} · partial coverage; archive starts ${label(earliest)}.`;
+        note.textContent = `PARTIAL · FROM ${label(earliest)}`;
         note.dataset.state = 'limited';
-      } else note.textContent = `${averaging} · gaps indicate missing observations`;
+      } else note.textContent = '';
       return { ...window, observationPoints };
     }
 
@@ -201,7 +200,7 @@ window.CligmetHistory = (() => {
       const selected = baseline ? [{ ...baseline, timestamp: new Date(window.start).toISOString(), carried_forward: true }, ...visible] : visible;
       if (selected.length && stamp(selected.at(-1).timestamp) < window.end) selected.push({ ...selected.at(-1), timestamp: new Date(window.end).toISOString(), carried_forward: true });
       note.dataset.state = coefficientData?.failed || coefficientData?.truncated ? 'limited' : '';
-      note.textContent = coefficientData?.failed ? 'Saved coefficient changes from the current snapshot; longer archive unavailable.' : coefficientData?.truncated ? 'Showing the most recent 5,000 coefficient changes.' : !coefficientData ? 'Loading saved coefficient changes…' : 'Step lines show the coefficient in force between saved changes.';
+      note.textContent = coefficientData?.failed ? 'ARCHIVE UNAVAILABLE' : coefficientData?.truncated ? 'LATEST 5000' : '';
       return { ...window, history: selected, savedCount: visible.length };
     }
 
