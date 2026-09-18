@@ -3,7 +3,7 @@
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const HOUR = 3600000;
-  const COLOURS = { ink: '#151b24', muted: '#506168', grid: '#dce8e9', forecast: '#2424c9', archived: '#728080' };
+  const COLOURS = { ink: '#111111', muted: '#5c5c5c', grid: '#d8d8d8', forecast: '#111111', archived: '#6a6a6a', band: '#d7d7d7', boundary: '#8a8a8a' };
   const $ = id => document.getElementById(id);
   const number = value => {
     if (typeof value !== 'number' && typeof value !== 'string') return null;
@@ -232,7 +232,7 @@
       if (group.length > 1) {
         const upper = group.map((point, index) => `${index ? 'L' : 'M'}${x(point.t)},${y(point.upper)}`).join(' ');
         const lower = [...group].reverse().map(point => `L${x(point.t)},${y(point.lower)}`).join(' ');
-        parent.append(svgElement('path', { d: `${upper} ${lower} Z`, fill: COLOURS.forecast, 'fill-opacity': .09, stroke: 'none' }));
+        parent.append(svgElement('path', { d: `${upper} ${lower} Z`, fill: COLOURS.band, 'fill-opacity': .45, stroke: 'none' }));
       }
       group = [];
     };
@@ -282,7 +282,6 @@
     const x = stamp => plot.left + (stamp - domain.start) / (domain.end - domain.start || 1) * plot.width;
     const y = value => plot.top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (plot.bottom - plot.top);
     const forecastX = Math.max(plot.left, Math.min(plot.right, x(domain.boundary)));
-    svg.append(svgElement('rect', { x: forecastX, y: plot.top, width: plot.right - forecastX, height: plot.bottom - plot.top, fill: '#efefff' }));
     for (let i = 0; i <= 4; i++) {
       const value = bounds.low + (bounds.high - bounds.low) * i / 4;
       const yy = y(value);
@@ -310,10 +309,10 @@
       });
     });
     svg.append(lines);
-    if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: '#9292c6', 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
+    if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: COLOURS.boundary, 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
     if (plot.right - forecastX > 57) svg.append(svgElement('text', { x: Math.min(forecastX + 6, plot.right - 57), y: 15, fill: COLOURS.forecast, 'font-size': 12 }, 'Forecast'));
     const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true' });
-    const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#788993', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
+    const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
     guide.append(guideLine);
     svg.append(guide);
     const timeline = [...new Set(series.flatMap(item => item.points.filter(point => point.value !== null).map(point => point.t)).concat(useBand ? forecast.filter(point => number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null).map(point => point.t) : []))].sort((a, b) => a - b);
