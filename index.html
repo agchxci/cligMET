@@ -17,17 +17,6 @@
   <div class="site-shell">
     <header class="masthead">
       <a class="wordmark" href="#" aria-label="cligMET home">cligMET</a>
-
-      <div class="masthead-live" aria-label="Current temperature">
-        <div class="masthead-live-kicker" aria-hidden="true"><span>01</span><span>CLG/01.0</span></div>
-        <div class="temperature-reading masthead-temperature"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
-        <div class="masthead-live-foot">
-          <span class="reading-time" id="observationTime">—</span>
-          <span class="status-badge" id="dataBadge">CONNECTING</span>
-        </div>
-        <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
-      </div>
-
       <div class="masthead-meta">
         <span class="eyebrow">Meteorological observations</span>
         <span class="station-name" id="stationName">Station —</span>
@@ -40,8 +29,17 @@
     <main>
       <section id="observations" class="observations" aria-labelledby="observationsTitle">
         <h1 id="observationsTitle" class="visually-hidden">Current conditions</h1>
+        <div class="section-register current-register" aria-hidden="true"><span class="section-number">01</span><span class="section-ref">CLG/01.0</span></div>
 
         <article class="current-panel" id="weatherOverview" aria-busy="true">
+          <div class="primary-reading">
+            <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
+            <div class="primary-reading-foot">
+              <p class="reading-time" id="observationTime">—</p>
+              <span class="status-badge" id="dataBadge">CONNECTING</span>
+            </div>
+            <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+          </div>
           <div class="measurement-matrix" aria-label="Current station measurements">
             <div class="measurement-row"><span class="measurement-code">RH</span><span class="measurement-name">Humidity</span><span class="measurement-value" id="humidityValue">—</span><span class="measurement-unit">%</span></div>
             <div class="measurement-row"><span class="measurement-code">PRES</span><span class="measurement-name">Pressure</span><span class="measurement-value" id="pressureValue">—</span><span class="measurement-unit">hPa</span></div>
