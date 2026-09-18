@@ -199,14 +199,6 @@
   function drawTimeTicks(svg, domain, plot, x) {
     const targetCount = Math.max(2, Math.floor(plot.width / 88));
     const step = Math.max(1, Math.ceil((domain.end - domain.start) / HOUR / targetCount)) * HOUR;
-    const minorStep = step / 2;
-    // One quiet minor division between labelled time ticks keeps the technical grid without visual overload.
-    for (let stamp = Math.ceil(domain.start / minorStep) * minorStep; stamp <= domain.end; stamp += minorStep) {
-      const isMajor = Math.abs(stamp / step - Math.round(stamp / step)) < 1e-7;
-      if (isMajor) continue;
-      const xx = x(stamp);
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMinor, 'stroke-width': .5 }));
-    }
     // Epoch-based major ticks keep a consistent real-time scale through clock changes.
     const ticks = [];
     for (let stamp = Math.ceil(domain.start / step) * step; stamp <= domain.end; stamp += step) ticks.push(stamp);
@@ -294,12 +286,12 @@
     const x = stamp => plot.left + (stamp - domain.start) / (domain.end - domain.start || 1) * plot.width;
     const y = value => plot.top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (plot.bottom - plot.top);
     const forecastX = Math.max(plot.left, Math.min(plot.right, x(domain.boundary)));
-    const horizontalDivisions = 8;
+    const horizontalDivisions = 4;
     for (let i = 0; i <= horizontalDivisions; i++) {
       const value = bounds.low + (bounds.high - bounds.low) * i / horizontalDivisions;
       const yy = y(value);
-      const major = i % 2 === 0;
-      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .8 : .5 }));
+      const major = true;
+      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: COLOURS.gridMajor, 'stroke-width': .75 }));
       if (major) {
         const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
         svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 11 }, format(value, digits)));
