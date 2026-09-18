@@ -18,8 +18,9 @@
     const result = new Date(value).getTime();
     return Number.isFinite(result) ? result : null;
   };
-  const dateLabel = value => time(value) === null ? 'not available' : new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  const clockLabel = value => time(value) === null ? '—' : new Date(value).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  const shortDate = value => time(value) === null ? '—' : new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const clockLabel = value => time(value) === null ? '—' : new Date(value).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const dateLabel = value => time(value) === null ? '—' : `${shortDate(value)} ${clockLabel(value)}`;
   const text = (id, value) => { $(id).textContent = value; };
   const list = value => Array.isArray(value) ? value : [];
   const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'device local time';
@@ -88,7 +89,7 @@
     if (!snapshot) {
       status = state.error ? 'error' : 'loading';
       label = state.error ? 'OFFLINE' : 'CONNECTING';
-      message = state.error || 'Loading the latest station reading…';
+      message = state.error ? 'OFFLINE' : '';
     } else {
       const observation = snapshot.current?.available ? snapshot.current.observation : null;
       const observedAt = time(observation?.timestamp);
@@ -100,18 +101,18 @@
       status = state.error || sourceError || !fresh ? 'stale' : 'fresh';
       label = status === 'fresh' ? 'LIVE' : 'STALE';
       if (state.error) {
-        message = `Couldn’t fetch the latest data. ${observedAt !== null ? `Showing the reading from ${dateLabel(observedAt)}.` : 'Showing the last available snapshot.'} Try Refresh.`;
+        message = observedAt !== null ? `OFFLINE · ${dateLabel(observedAt)}` : 'OFFLINE';
       } else if (!observation) {
         label = 'NO DATA';
-        message = snapshot.settings?.configured === false ? 'The station publisher is not configured yet.' : 'The station has not supplied a current observation. Available history is shown below.';
+        message = 'NO DATA';
       } else if (sourceError) {
-        message = `Station refresh failed. Showing the stored observation from ${dateLabel(observedAt)}.`;
+        message = `SYNC ERROR · ${dateLabel(observedAt)}`;
       } else if (!fresh) {
-        message = `Latest observation: ${dateLabel(observedAt)}. ${publishedAt === null ? 'The snapshot timestamp is unavailable.' : `Snapshot published ${dateLabel(publishedAt)}.`} Readings may be out of date.`;
+        message = `STALE · ${dateLabel(observedAt)}`;
       } else if (snapshot.status?.syncing) {
-        message = `Updating station data. Latest observation: ${clockLabel(observedAt)}.`;
+        message = `SYNC · ${clockLabel(observedAt)}`;
       } else {
-        message = `Observed ${clockLabel(observedAt)} · published ${clockLabel(publishedAt)} · updates every minute`;
+        message = '';
       }
     }
     text('dataBadge', label);
@@ -124,7 +125,7 @@
     const snapshot = state.snapshot;
     const station = String(snapshot.settings?.station_id || '—');
     text('stationName', `Station ${station}`);
-    text('footerStation', `Station ${station} · Weather Underground observations`);
+    text('footerStation', `Station ${station}`);
     const latitude = number(snapshot.settings?.latitude ?? snapshot.settings?.lat);
     const longitude = number(snapshot.settings?.longitude ?? snapshot.settings?.lon);
     const position = latitude !== null && longitude !== null ? ` · ${Math.abs(latitude).toFixed(2)}°${latitude >= 0 ? 'N' : 'S'} / ${Math.abs(longitude).toFixed(2)}°${longitude >= 0 ? 'E' : 'W'}` : '';
@@ -139,7 +140,7 @@
     const trend = snapshot.current?.available ? number(snapshot.current?.trends?.change_3h) : null;
     text('pressureTrendValue', signed(trend));
     text('pressureTrendNote', `Pressure change · ${trend === null ? 'unavailable' : trend > .05 ? 'rising' : trend < -.05 ? 'falling' : 'steady'} · 3 h`);
-    text('observationTime', time(observation.timestamp) === null ? 'Observation time unavailable' : dateLabel(observation.timestamp));
+    text('observationTime', dateLabel(observation.timestamp));
     const display = snapshot.settings?.display;
     if (!state.preferencesInitialised && display) {
       state.preferences.measured = display.show_measured !== false;
@@ -159,15 +160,13 @@
     const minimum = number(metrics.minimum_verified_hours) ?? number(calibration?.minimum_verified_hours) ?? 168;
     const verified = number(metrics.verified_hours);
     const days = number(metrics.calibration_days) ?? number(calibration?.calibration_days);
-    let explanation;
-    if (!calibration) explanation = 'Calibration results are not included in the current snapshot.';
-    else if (calibration.paused) explanation = 'Automatic calibration is paused. The existing coefficients remain in use.';
-    else if (calibration.mode !== 'auto') explanation = 'The forecast uses manually selected coefficients. Errors below compare verified temperature forecasts with observations.';
-    else if (calibration.status === 'collecting' || (verified !== null && verified < minimum)) explanation = `Collecting verified results: ${format(verified, 0)} of ${minimum} unique hours needed before automatic adjustments begin.`;
-    else explanation = `Temperature forecasts are checked against observations${days !== null ? ` over a rolling ${format(days, 0)}-day window` : ''}. Automatic coefficient changes are limited to small daily steps.`;
+    const explanation = !calibration ? 'UNAVAILABLE'
+      : calibration.paused ? 'PAUSED'
+      : calibration.status === 'collecting' || (verified !== null && verified < minimum) ? `${format(verified, 0)}/${minimum} H VERIFIED`
+      : days !== null ? `${format(days, 0)}D WINDOW` : '';
     text('calibrationStatus', explanation);
     text('verifiedHours', format(verified, 0));
-    text('verifiedNote', `${minimum} hours required for calibration`);
+    text('verifiedNote', '');
     text('cligmetMae', format(metrics.cligmet_mae, 3));
     text('modelMae', format(metrics.model_mae, 3));
     text('improvement', signed(metrics.improvement, 3));
@@ -177,7 +176,7 @@
     text('coefficientPressure', percentage(controls.pressure_trend_influence));
     text('coefficientResponsiveness', `${format(controls.temperature_responsiveness)} °C/h`);
     text('coefficientRain', percentage(controls.local_rain_influence));
-    text('calibrationNote', `Last automatic check: ${dateLabel(calibration?.last_run)}. Model settings are managed on the home cligMET dashboard.`);
+    text('calibrationNote', '');
     renderCoefficientHistory();
   }
 
@@ -209,12 +208,8 @@
       const anchor = xx < plot.left + 24 ? 'start' : xx > plot.right - 24 ? 'end' : 'middle';
       const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 11 });
       const longWindow = domain.end - domain.start > 8 * 24 * HOUR;
-      label.append(svgElement('tspan', { x: xx }, longWindow
-        ? new Date(stamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-        : new Date(stamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })));
-      label.append(svgElement('tspan', { x: xx, dy: 16 }, longWindow
-        ? String(new Date(stamp).getFullYear())
-        : new Date(stamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })));
+      label.append(svgElement('tspan', { x: xx }, longWindow ? shortDate(stamp) : clockLabel(stamp)));
+      if (!longWindow) label.append(svgElement('tspan', { x: xx, dy: 16 }, shortDate(stamp)));
       svg.append(label);
     });
   }
@@ -376,13 +371,8 @@
   function renderCharts() {
     if (!state.snapshot) return;
     chartDefinitions.forEach(definition => renderChart(definition, historyNavigation.view(definition.id.replace('Chart', ''))));
-    const snapshot = state.snapshot;
-    const parts = ['Each plot has its own history window; aggregation is shown above it.'];
-    if (snapshot.forecast?.available) parts.push(`Forecast issued ${dateLabel(snapshot.forecast.issued_at)}.`);
-    else parts.push('The current forecast is unavailable.');
-    if (snapshot.past_forecast?.available && state.preferences.archived) parts.push(`Archived forecast issued ${dateLabel(snapshot.past_forecast.issued_at)}.`);
-    text('forecastNote', parts.join(' '));
-    text('timezoneNote', `All times: ${localZone.replaceAll('_', ' ')}.`);
+    text('forecastNote', '');
+    text('timezoneNote', '');
   }
 
   function renderCoefficientHistory() {
@@ -399,8 +389,8 @@
     const width = Math.max(180, svg.getBoundingClientRect().width), height = 250;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     if (!history.length) {
-      drawEmpty(svg, width, height, 'No coefficient history yet');
-      text('coefficientDescription', 'No saved snapshots are available for this coefficient.');
+      drawEmpty(svg, width, height, 'No data');
+      text('coefficientDescription', '');
       return;
     }
     const first = history[0], last = history.at(-1);
@@ -429,9 +419,9 @@
       dot.append(svgElement('title', {}, `${dateLabel(point.t)}: ${format(point.value, definition.digits)} ${definition.unit}`));
       svg.append(dot);
     });
-    svg.append(svgElement('text', { x: left, y: height - 13, 'font-size': 12, fill: COLOURS.muted }, new Date(view.start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })));
-    svg.append(svgElement('text', { x: right, y: height - 13, 'text-anchor': 'end', 'font-size': 12, fill: COLOURS.muted }, new Date(view.end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })));
-    text('coefficientDescription', `${definition.label}: ${format(first.value, definition.digits)} ${definition.unit} at the first known point in this window; ${format(last.value, definition.digits)} ${definition.unit} at the end. ${view.savedCount} saved changes in this window. Values carry forward between changes.`);
+    svg.append(svgElement('text', { x: left, y: height - 13, 'font-size': 12, fill: COLOURS.muted }, shortDate(view.start)));
+    svg.append(svgElement('text', { x: right, y: height - 13, 'text-anchor': 'end', 'font-size': 12, fill: COLOURS.muted }, shortDate(view.end)));
+    text('coefficientDescription', '');
   }
 
   function renderPreferences() {
@@ -532,7 +522,7 @@
   }
 
   renderPreferences();
-  text('todayLabel', new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }));
+  text('todayLabel', shortDate(Date.now()));
   ['showMeasured', 'showForecast', 'showArchived', 'showRange'].forEach(id => $(id).addEventListener('change', savePreferences));
   ['temperature', 'pressure', 'humidity', 'solar', 'coefficient'].forEach(id => historyNavigation.bind(id));
   $('refreshButton').addEventListener('click', loadSnapshot);
@@ -559,7 +549,7 @@
   window.addEventListener('online', loadSnapshot);
   setInterval(() => {
     if (document.visibilityState === 'visible') {
-      text('todayLabel', new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }));
+      text('todayLabel', shortDate(Date.now()));
       loadSnapshot();
     }
   }, 60000);
