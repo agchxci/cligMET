@@ -31,7 +31,7 @@
         <div class="section-heading overview-heading">
           <div>
             <p class="eyebrow">Live station console</p>
-            <h1 id="observationsTitle">Current conditions</h1>
+            <h1 id="observationsTitle">Now</h1>
           </div>
           <span class="status-badge" id="dataBadge">CONNECTING</span>
         </div>
@@ -45,12 +45,12 @@
           </div>
 
           <div class="measurement-matrix" aria-label="Current station measurements">
-            <div class="measurement-row"><span class="measurement-code">RH</span><span class="measurement-name">Relative humidity</span><span class="measurement-value" id="humidityValue">—</span><span class="measurement-unit">%</span></div>
-            <div class="measurement-row"><span class="measurement-code">PRES</span><span class="measurement-name">Atmospheric pressure</span><span class="measurement-value" id="pressureValue">—</span><span class="measurement-unit">hPa</span></div>
+            <div class="measurement-row"><span class="measurement-code">RH</span><span class="measurement-name">Humidity</span><span class="measurement-value" id="humidityValue">—</span><span class="measurement-unit">%</span></div>
+            <div class="measurement-row"><span class="measurement-code">PRES</span><span class="measurement-name">Pressure</span><span class="measurement-value" id="pressureValue">—</span><span class="measurement-unit">hPa</span></div>
             <div class="measurement-row"><span class="measurement-code">ΔP3H</span><span class="measurement-name" id="pressureTrendNote">Pressure change · previous 3 hours</span><span class="measurement-value" id="pressureTrendValue">—</span><span class="measurement-unit">hPa</span></div>
-            <div class="measurement-row"><span class="measurement-code">WIND</span><span class="measurement-name">Wind speed</span><span class="measurement-value" id="windValue">—</span><span class="measurement-unit">km/h</span></div>
-            <div class="measurement-row"><span class="measurement-code">RAIN</span><span class="measurement-name">Rain rate</span><span class="measurement-value" id="rainValue">—</span><span class="measurement-unit">mm/h</span></div>
-            <div class="measurement-row"><span class="measurement-code">SOL</span><span class="measurement-name">Solar irradiance</span><span class="measurement-value" id="solarValue">—</span><span class="measurement-unit">W/m²</span></div>
+            <div class="measurement-row"><span class="measurement-code">WIND</span><span class="measurement-name">Wind</span><span class="measurement-value" id="windValue">—</span><span class="measurement-unit">km/h</span></div>
+            <div class="measurement-row"><span class="measurement-code">RAIN</span><span class="measurement-name">Rain</span><span class="measurement-value" id="rainValue">—</span><span class="measurement-unit">mm/h</span></div>
+            <div class="measurement-row"><span class="measurement-code">SOL</span><span class="measurement-name">Solar</span><span class="measurement-value" id="solarValue">—</span><span class="measurement-unit">W/m²</span></div>
           </div>
         </article>
       </section>
@@ -190,7 +190,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><div><a class="footer-wordmark" href="#">cligMET</a></div><div class="footer-detail"><span id="footerStation">Station —</span><a href="#observations">Top ↑</a></div></footer>
+    <footer class="site-footer"><span id="footerStation">Station —</span><a href="#observations">Top ↑</a></footer>
   </div>
   <noscript><div class="noscript">Enable JavaScript to load the weather observations and forecasts.</div></noscript>
 </body>

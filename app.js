@@ -139,7 +139,7 @@
     text('rainValue', format(observation.precip_rate));
     const trend = snapshot.current?.available ? number(snapshot.current?.trends?.change_3h) : null;
     text('pressureTrendValue', signed(trend));
-    text('pressureTrendNote', `Pressure change · ${trend === null ? 'unavailable' : trend > .05 ? 'rising' : trend < -.05 ? 'falling' : 'steady'} · 3 h`);
+    text('pressureTrendNote', `ΔP / 3H · ${trend === null ? '—' : trend > .05 ? 'RISING' : trend < -.05 ? 'FALLING' : 'STEADY'}`);
     text('observationTime', dateLabel(observation.timestamp));
     const display = snapshot.settings?.display;
     if (!state.preferencesInitialised && display) {

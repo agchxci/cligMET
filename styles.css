@@ -1097,3 +1097,105 @@ body { background: var(--page); }
   .performance-grid,
   .model-details { margin-left: 0; }
 }
+
+
+/* Editorial push II — simplify naming, exaggerate offsets, break remaining symmetry. */
+.masthead-meta {
+  justify-items: end;
+  text-align: right;
+}
+.station-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -.03em;
+}
+#todayLabel {
+  font-size: .625rem;
+  letter-spacing: .04em;
+}
+
+/* Slightly different heading offsets per section create a poster-like rhythm. */
+.weather-section .section-heading {
+  padding-left: clamp(110px, 15vw, 220px);
+}
+.calibration-section .section-heading {
+  padding-left: clamp(64px, 7vw, 96px);
+}
+.weather-section::before { left: clamp(0px, 2vw, 28px); }
+.calibration-section::before { left: clamp(18px, 4vw, 54px); }
+
+/* Current readings: deliberately uneven sizes. */
+.measurement-row:nth-child(2) .measurement-value {
+  font-size: clamp(3.4rem, 5.5vw, 5.9rem);
+}
+.measurement-row:nth-child(3) .measurement-value,
+.measurement-row:nth-child(5) .measurement-value {
+  font-size: clamp(2.1rem, 3.2vw, 3.4rem);
+}
+.measurement-row:nth-child(6) {
+  transform: translateX(clamp(0px, 2vw, 26px));
+}
+
+/* Vary heading alignment between charts instead of repeating one component four times. */
+.chart-card:nth-child(2) .chart-heading {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.chart-card:nth-child(3) .chart-heading {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.chart-card:nth-child(3) .chart-heading h3 { text-align: right; }
+.chart-card:nth-child(4) .chart-heading {
+  padding-left: clamp(0px, 3vw, 40px);
+}
+
+/* Calibration behaves like four pieces of type, not four cards. */
+.performance-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0 16px;
+}
+.performance-metric:nth-child(1) { grid-column: 1 / span 2; }
+.performance-metric:nth-child(2) { grid-column: 3 / span 3; }
+.performance-metric:nth-child(3) { grid-column: 6 / span 3; }
+.performance-metric:nth-child(4) { grid-column: 9 / -1; }
+.performance-metric:nth-child(4) .performance-value {
+  font-size: clamp(4rem, 7vw, 7.2rem);
+}
+.model-details {
+  width: min(72%, 920px);
+  margin-left: auto;
+}
+
+/* Footer becomes a tiny folio line; no repeated cligMET wordmark. */
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  font-size: .625rem;
+}
+.site-footer .footer-wordmark { display: none; }
+
+@media (max-width: 900px) {
+  .masthead-meta { justify-items: start; text-align: left; }
+  .weather-section .section-heading,
+  .calibration-section .section-heading { padding-left: 72px; }
+  .weather-section::before,
+  .calibration-section::before { left: 0; }
+  .performance-grid { grid-template-columns: 1fr 1fr; }
+  .performance-metric:nth-child(1),
+  .performance-metric:nth-child(2),
+  .performance-metric:nth-child(3),
+  .performance-metric:nth-child(4) { grid-column: auto; }
+  .model-details { width: 100%; }
+  .measurement-row:nth-child(6) { transform: none; }
+}
+
+@media (max-width: 620px) {
+  .weather-section .section-heading,
+  .calibration-section .section-heading { padding-left: 54px; }
+  .performance-grid { grid-template-columns: 1fr 1fr; }
+}
