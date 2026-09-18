@@ -87,7 +87,7 @@
     let message, label, status;
     if (!snapshot) {
       status = state.error ? 'error' : 'loading';
-      label = state.error ? 'Unavailable' : 'Connecting';
+      label = state.error ? 'OFFLINE' : 'CONNECTING';
       message = state.error || 'Loading the latest station reading…';
     } else {
       const observation = snapshot.current?.available ? snapshot.current.observation : null;
@@ -98,11 +98,11 @@
       const age = referenceTimes.length ? Math.max(0, Date.now() - Math.min(...referenceTimes)) : null;
       const fresh = age !== null && age <= 15 * 60000 && observedAt !== null && publishedAt !== null;
       status = state.error || sourceError || !fresh ? 'stale' : 'fresh';
-      label = status === 'fresh' ? 'Up to date' : 'Older data';
+      label = status === 'fresh' ? 'LIVE' : 'STALE';
       if (state.error) {
         message = `Couldn’t fetch the latest data. ${observedAt !== null ? `Showing the reading from ${dateLabel(observedAt)}.` : 'Showing the last available snapshot.'} Try Refresh.`;
       } else if (!observation) {
-        label = 'No observation';
+        label = 'NO DATA';
         message = snapshot.settings?.configured === false ? 'The station publisher is not configured yet.' : 'The station has not supplied a current observation. Available history is shown below.';
       } else if (sourceError) {
         message = `Station refresh failed. Showing the stored observation from ${dateLabel(observedAt)}.`;
@@ -125,6 +125,10 @@
     const station = String(snapshot.settings?.station_id || '—');
     text('stationName', `Station ${station}`);
     text('footerStation', `Station ${station} · Weather Underground observations`);
+    const latitude = number(snapshot.settings?.latitude ?? snapshot.settings?.lat);
+    const longitude = number(snapshot.settings?.longitude ?? snapshot.settings?.lon);
+    const position = latitude !== null && longitude !== null ? ` · ${Math.abs(latitude).toFixed(2)}°${latitude >= 0 ? 'N' : 'S'} / ${Math.abs(longitude).toFixed(2)}°${longitude >= 0 ? 'E' : 'W'}` : '';
+    text('stationMeta', `STN ${station}${position} · TZ ${localZone.replaceAll('_', ' ').toUpperCase()} · UPDATE 60S`);
     const observation = snapshot.current?.available ? snapshot.current.observation || {} : {};
     text('temperatureValue', format(observation.temperature));
     text('humidityValue', format(observation.humidity, 0));
@@ -134,7 +138,7 @@
     text('rainValue', format(observation.precip_rate));
     const trend = snapshot.current?.available ? number(snapshot.current?.trends?.change_3h) : null;
     text('pressureTrendValue', signed(trend));
-    text('pressureTrendNote', `${trend === null ? 'Change unavailable' : trend > .05 ? 'Rising' : trend < -.05 ? 'Falling' : 'Steady'} · previous 3 hours`);
+    text('pressureTrendNote', `Pressure change · ${trend === null ? 'unavailable' : trend > .05 ? 'rising' : trend < -.05 ? 'falling' : 'steady'} · 3 h`);
     text('observationTime', time(observation.timestamp) === null ? 'Observation time unavailable' : dateLabel(observation.timestamp));
     const display = snapshot.settings?.display;
     if (!state.preferencesInitialised && display) {
@@ -201,7 +205,9 @@
       const isMajor = Math.abs(stamp / step - Math.round(stamp / step)) < 1e-7;
       if (isMajor) continue;
       const xx = x(stamp);
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMinor, 'stroke-width': .6 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMinor, 'stroke-width': .5 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.top + 3, stroke: COLOURS.gridMajor, 'stroke-width': .7 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.bottom - 3, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .7 }));
     }
     // Epoch-based major ticks keep a consistent real-time scale through clock changes.
     const ticks = [];
@@ -209,7 +215,9 @@
     if (!ticks.length) ticks.push(domain.start);
     ticks.forEach(stamp => {
       const xx = x(stamp);
-      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': 1 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .9 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.top + 5, stroke: COLOURS.ink, 'stroke-width': .8 }));
+      svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.bottom - 5, y2: plot.bottom, stroke: COLOURS.ink, 'stroke-width': .8 }));
       const anchor = xx < plot.left + 24 ? 'start' : xx > plot.right - 24 ? 'end' : 'middle';
       const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 11 });
       const longWindow = domain.end - domain.start > 8 * 24 * HOUR;
@@ -295,7 +303,10 @@
       const value = bounds.low + (bounds.high - bounds.low) * i / horizontalDivisions;
       const yy = y(value);
       const major = i % 3 === 0;
-      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? 1 : .6 }));
+      svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.gridMajor : COLOURS.gridMinor, 'stroke-width': major ? .9 : .5 }));
+      const tick = major ? 5 : 3;
+      svg.append(svgElement('line', { x1: plot.left, x2: plot.left + tick, y1: yy, y2: yy, stroke: major ? COLOURS.ink : COLOURS.gridMajor, 'stroke-width': .7 }));
+      svg.append(svgElement('line', { x1: plot.right - tick, x2: plot.right, y1: yy, y2: yy, stroke: major ? COLOURS.ink : COLOURS.gridMajor, 'stroke-width': .7 }));
       if (major) {
         const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
         svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 11 }, format(value, digits)));
