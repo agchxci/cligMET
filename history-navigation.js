@@ -152,6 +152,10 @@ window.CligmetHistory = (() => {
     function controls(id, window, earliest) {
       const selection = periodFor(id);
       document.getElementById(`${id}Period`).value = selection.period;
+      document.querySelectorAll(`[data-period-target="${id}"]`).forEach(button => {
+        const active = button.dataset.period === selection.period;
+        button.setAttribute('aria-pressed', String(active));
+      });
       const fixed = ['all', 'forecast'].includes(selection.period);
       document.getElementById(`${id}Previous`).disabled = fixed || (earliest !== null && window.start <= earliest);
       document.getElementById(`${id}Next`).disabled = fixed || selection.offset === 0;
@@ -216,6 +220,13 @@ window.CligmetHistory = (() => {
         current.anchor = null;
         savePeriods();
         onChange();
+      });
+      document.querySelectorAll(`[data-period-target="${id}"]`).forEach(button => {
+        button.addEventListener('click', () => {
+          if (!PERIODS.has(button.dataset.period)) return;
+          select.value = button.dataset.period;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
       });
       for (const [suffix, change] of [['Previous', -1], ['Next', 1], ['Latest', 0]]) {
         document.getElementById(`${id}${suffix}`).addEventListener('click', () => {
