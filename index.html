@@ -1,1042 +1,204 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>cligMET</title>
-  <style>
-    :root {
-      --page: lightcyan;
-      --panel: #f0f0f0;
-      --ink: #000;
-      --muted: rgba(0,0,0,.58);
-      --line: rgba(0,0,0,.34);
-      --forecast: #000;
-      --danger: #9a0000;
-    }
-    * { box-sizing: border-box; }
-    html { font-size: clamp(12px, 1.25vw, 18px); }
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--page);
-      color: var(--ink);
-      margin: 0;
-      min-height: 100vh;
-    }
-    button, input, select { font: inherit; }
-    .page-heading {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 18px;
-      margin: 12px 0 8px;
-      border-bottom: 1px solid rgba(0,0,0,.22);
-      padding: 14px 0 26px;
-      overflow: visible;
-    }
-    .page-title {
-      font-size: clamp(4rem, 10vw, 8.8rem);
-      line-height: .94;
-      font-weight: 500;
-      letter-spacing: -.075em;
-      margin: 0;
-      padding: 0 0 .08em;
-      white-space: nowrap;
-      overflow: visible;
-    }
-    .page-kicker {
-      max-width: 300px;
-      padding-bottom: 2px;
-      font-size: .86rem;
-      text-align: right;
-      color: var(--muted);
-    }
-    main {
-      position: relative;
-      z-index: 1;
-      width: min(100% - 28px, 1160px);
-      margin: 0 auto;
-      padding: 18px 0 110px;
-    }
-    .toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 0;
-      background: linear-gradient(var(--page) 70%, transparent);
-    }
-    .toolbar-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    .button {
-      border: 1px solid #000;
-      background: var(--panel);
-      color: #000;
-      min-height: 36px;
-      padding: 7px 12px;
-      cursor: pointer;
-    }
-    .button:hover { background: #fff; }
-    .status-line {
-      min-height: 25px;
-      margin: 8px 0 18px;
-      font-size: .9rem;
-    }
-    .status-line.error { color: var(--danger); }
-    .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(300px, 500px) minmax(280px, 1fr);
-      gap: 26px;
-      align-items: start;
-    }
-    .observation-square {
-      width: 100%;
-      max-width: 500px;
-      aspect-ratio: 1 / 1;
-      background: var(--panel);
-      position: relative;
-      border: 1px solid #fff;
-      overflow: hidden;
-    }
-    .edge-box {
-      position: absolute;
-      background: var(--panel);
-      padding: 7px 4px;
-      font-size: clamp(1rem, 2vw, 1.45rem);
-      width: 76%;
-      max-width: 375px;
-      height: 42px;
-      text-align: center;
-      z-index: 3;
-      white-space: nowrap;
-    }
-    .edge-box.top { top: 0; left: 50%; transform: translateX(-50%); }
-    .edge-box.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
-    .edge-box.left {
-      left: 18px; top: 88%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center;
-    }
-    .edge-box.right {
-      right: 18px; top: 88%; transform: translateY(-50%) rotate(90deg); transform-origin: right center;
-    }
-    .central-image {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .central-image img {
-      display: block;
-      width: auto;
-      height: auto;
-      max-width: 74%;
-      max-height: 74%;
-      object-fit: contain;
-    }
-    .closing-observation {
-      width: min(100%, 500px);
-      margin: 70px auto 0;
-    }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .metric {
-      min-height: 118px;
-      padding: 13px;
-      background: var(--panel);
-      border: 1px solid #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .metric-label { font-size: .85rem; text-transform: lowercase; }
-    .metric-value { font-size: clamp(1.8rem, 4vw, 3.7rem); line-height: .95; letter-spacing: -.04em; }
-    .metric-note { color: var(--muted); font-size: .78rem; }
-    .section-title {
-      font-size: clamp(1.6rem, 4vw, 3.8rem);
-      font-weight: 500;
-      letter-spacing: -.045em;
-      margin: 70px 0 15px;
-    }
-    .forecast-strip {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(112px, 1fr));
-      gap: 1px;
-      overflow-x: auto;
-      border: 1px solid #fff;
-      background: #fff;
-    }
-    .forecast-card {
-      min-width: 112px;
-      padding: 12px 10px 14px;
-      background: var(--panel);
-    }
-    .forecast-time { font-size: .82rem; }
-    .forecast-temp { font-size: 2rem; margin: 9px 0 3px; }
-    .forecast-condition { min-height: 2.5em; font-size: .8rem; }
-    .forecast-small { font-size: .72rem; line-height: 1.45; color: var(--muted); }
-    .charts { display: grid; gap: 26px; }
-    .chart-container {
-      width: 100%;
-      aspect-ratio: 400 / 205;
-      min-height: 390px;
-      background: #d8d8d8;
-      border: 1px solid #c8c8c8;
-      padding: 38px 48px 46px;
-      position: relative;
-    }
-    .chart-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .chart-title { font-size: 1rem; }
-    .chart-note { font-size: .72rem; color: var(--muted); text-align: right; }
-    .chart-svg { width: 100%; height: calc(100% - 37px); display: block; background: #fff; border: 1px solid rgba(0,0,0,.18); }
-    .forecast-explainer {
-      margin-top: 16px;
-      padding: 14px;
-      background: var(--panel);
-      border: 1px solid #fff;
-      font-size: .83rem;
-      line-height: 1.55;
-    }
-    .control-grid { display: grid; gap: 18px; }
-    .control-row {
-      background: var(--panel);
-      border: 1px solid #fff;
-      padding: 14px;
-    }
-    .control-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: baseline;
-      margin-bottom: 9px;
-    }
-    .control-name { font-size: .95rem; }
-    .control-head label { display: inline; margin: 0; }
-    .control-value { font-variant-numeric: tabular-nums; font-size: .86rem; color: var(--muted); }
-    .control-help { margin: 8px 0 0; font-size: .76rem; line-height: 1.4; color: var(--muted); }
-    input[type="range"] { padding: 0; accent-color: #000; }
-    .model-note {
-      margin: 0 0 16px;
-      padding: 12px 14px;
-      background: #fff;
-      border: 1px solid rgba(0,0,0,.25);
-      font-size: .8rem;
-      line-height: 1.5;
-    }
-    .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .preset-button.active { background: #000; color: #fff; }
-    .preset-description { margin: 10px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.45; }
-    details.advanced-controls { margin-top: 16px; }
-    details.advanced-controls > summary {
-      cursor: pointer; padding: 12px 14px; background: var(--panel); border: 1px solid #fff;
-    }
-    details.advanced-controls[open] > summary { margin-bottom: 12px; }
-    .option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
-    .option-label { display: flex; align-items: center; gap: 9px; margin: 0; font-size: .84rem; }
-    input[type="checkbox"] { width: auto; padding: 0; accent-color: #000; }
-    .chart-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: -4px 0 12px; font-size: .7rem; color: var(--muted); }
-    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
-    .legend-line { width: 26px; border-top: 2px solid #000; }
-    .legend-line.adjusted { border-top-style: dashed; }
-    .legend-line.model { border-top-color: #707070; border-top-style: dotted; }
-    .legend-line.persistence { border-top-color: #aaa; border-top-style: dashed; }
-    .legend-line.archived { border-top-color: #666; border-top-style: dotted; }
-    .legend-band { width: 26px; height: 9px; background: rgba(0,0,0,.10); border: 1px solid rgba(0,0,0,.18); }
-
-    .calibration-panel { margin-top: 24px; padding: 20px; background: var(--panel); border: 1px solid #fff; }
-    .calibration-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
-    .calibration-mode { font-size: 1.35rem; margin-bottom: 5px; }
-    .calibration-status { color: var(--muted); font-size: .8rem; line-height: 1.45; max-width: 640px; }
-    .calibration-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .calibration-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
-    .calibration-metric { background: #fff; border: 1px solid rgba(0,0,0,.18); padding: 12px; }
-    .calibration-metric-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-    .calibration-metric-value { font-size: 1.3rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
-    .coefficient-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
-    .coefficient-item { background: #fff; border: 1px solid rgba(0,0,0,.18); padding: 11px; }
-    .coefficient-label { color: var(--muted); font-size: .7rem; line-height: 1.3; }
-    .coefficient-value { margin-top: 5px; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-    .calibration-chart-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-    .calibration-chart-controls label { margin: 0; font-size: .82rem; }
-    .calibration-chart-controls select { border: 1px solid #000; background: #fff; padding: 7px 9px; margin-left: 7px; }
-    .calibration-chart { width: 100%; height: 230px; display: block; background: #fff; border: 1px solid rgba(0,0,0,.18); margin-top: 10px; }
-    .calibration-note { font-size: .72rem; color: var(--muted); margin-top: 8px; line-height: 1.45; }
-    .dialog-actions.split { justify-content: space-between; }
-    .dialog-actions-left, .dialog-actions-right { display: flex; gap: 8px; }
-    dialog {
-      width: min(92vw, 560px);
-      border: 1px solid #000;
-      padding: 0;
-      background: var(--page);
-    }
-    dialog::backdrop { background: rgba(255,255,255,.72); }
-    .dialog-inner { padding: 20px; }
-    .dialog-inner h2 { margin: 0 0 18px; font-size: 2rem; font-weight: 500; }
-    label { display: block; margin: 14px 0 6px; }
-    input {
-      width: 100%; border: 1px solid #000; background: #fff; padding: 10px;
-    }
-    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-    .security-note { font-size: .8rem; color: var(--muted); line-height: 1.45; }
-    .empty {
-      padding: 22px; background: var(--panel); border: 1px solid #fff;
-    }
-    @media (max-width: 760px) {
-      .page-heading { align-items: flex-start; flex-direction: column; gap: 8px; padding: 12px 0 22px; }
-      .page-title { font-size: 22vw; line-height: .98; padding-bottom: .1em; }
-      .page-kicker { text-align: left; }
-      .hero-grid { grid-template-columns: 1fr; }
-      .observation-square { margin: auto; }
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-      .chart-container { min-height: 390px; aspect-ratio: auto; height: 450px; padding: 28px 24px 34px; }
-      .option-grid { grid-template-columns: 1fr; }
-      .preset-grid { grid-template-columns: 1fr 1fr; }
-      .calibration-metrics, .coefficient-grid { grid-template-columns: 1fr 1fr; }
-      .edge-box { font-size: .95rem; }
-    }
-  </style>
-  <script src="config.js"></script>
+  <meta name="theme-color" content="#e0ffff">
+  <meta name="description" content="cligMET — local weather observations, weekly, monthly and yearly history, and a station-adjusted 24-hour forecast, with transparent model calibration.">
+  <title>cligMET — weather observations &amp; forecasts</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="history-navigation.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
-  <main>
-    <header class="page-heading">
-      <h1 class="page-title">cligMET</h1>
-      <div class="page-kicker" id="headingStation">server weather dashboard</div>
+  <a class="skip-link" href="#observations">Skip to weather</a>
+  <div class="site-shell">
+    <header class="masthead">
+      <a class="wordmark" href="#" aria-label="cligMET home">cligMET</a>
+      <div class="masthead-meta">
+        <span class="eyebrow">Meteorological observations</span>
+        <span class="station-name" id="stationName">Station —</span>
+        <span class="muted" id="todayLabel">Past, present &amp; forecast</span>
+      </div>
     </header>
-    <div class="toolbar">
-      <div class="toolbar-group">
-        <button class="button" id="refreshButton">refresh data</button>
-        <button class="button" id="settingsButton">station settings</button>
-        <button class="button" id="forecastControlsButton">forecast controls</button>
-      </div>
-      <button class="button" id="docsButton">API docs</button>
-    </div>
-    <div class="status-line" id="statusLine">starting cligMET server…</div>
 
-    <section class="hero-grid">
-      <div class="observation-square">
-        <div class="central-image">
-          <img src="field-1.png" alt="field-1">
+    <nav class="navigation" aria-label="Page sections">
+      <div class="nav-links">
+        <a href="#observations">Overview</a>
+        <a href="#weather">Weather history</a>
+        <a href="#calibration">Calibration</a>
+      </div>
+      <button class="button refresh-button" id="refreshButton" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-5L4 9m1 4a7 7 0 0 0 12 5l3-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="refreshLabel">Refresh</span>
+      </button>
+    </nav>
+
+    <main>
+      <section id="observations" class="observations" aria-labelledby="observationsTitle">
+        <div class="section-heading overview-heading">
+          <h1 id="observationsTitle">Current conditions</h1>
+          <span class="status-badge" id="dataBadge">Connecting</span>
         </div>
-        <div class="edge-box top" id="solarValue">irradiance: --</div>
-        <div class="edge-box bottom" id="timeValue">observation: --</div>
-        <div class="edge-box left" id="temperatureValue">dry-bulb temperature: --</div>
-        <div class="edge-box right" id="humidityValue">relative humidity: --</div>
-      </div>
+        <div class="status-line" id="statusLine" role="status" aria-live="polite">Loading the latest station reading…</div>
 
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-label">atmospheric pressure</div>
-          <div class="metric-value" id="pressureValue">--</div>
-          <div class="metric-note">hPa</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">pressure change · 3 h</div>
-          <div class="metric-value" id="pressureTrend3">--</div>
-          <div class="metric-note">hPa / 3 h</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">wind speed</div>
-          <div class="metric-value" id="windValue">--</div>
-          <div class="metric-note">km/h</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">rain rate</div>
-          <div class="metric-value" id="rainValue">--</div>
-          <div class="metric-note">mm/h</div>
-        </div>
-      </div>
-    </section>
+        <div class="overview-grid" id="weatherOverview" aria-busy="true">
+          <article class="current-panel">
+            <div class="primary-reading">
+              <h2 class="metric-label">Dry-bulb temperature</h2>
+              <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
+              <p class="reading-time" id="observationTime">Waiting for an observation</p>
+            </div>
+            <figure class="field-art"><img src="assets/field-1.png" width="560" height="593" alt="" fetchpriority="high"><figcaption>cligMET / field 01</figcaption></figure>
+            <div class="secondary-readings">
+              <div><h2 class="metric-label">Relative humidity</h2><div class="secondary-value"><span id="humidityValue">—</span><span class="unit">%</span></div></div>
+              <div><h2 class="metric-label">Solar irradiance</h2><div class="secondary-value"><span id="solarValue">—</span><span class="unit">W/m²</span></div></div>
+            </div>
+          </article>
 
-    <h2 class="section-title">previous 3 days + next 24-hour forecast</h2>
-    <section class="charts">
-      <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">dry-bulb temperature</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
-        <div class="chart-legend" id="temperatureLegend"></div>
-        <svg class="chart-svg" id="temperatureChart"></svg>
-      </div>
-      <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">atmospheric pressure + pressure trend</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
-        <svg class="chart-svg" id="pressureChart"></svg>
-      </div>
-      <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">relative humidity</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
-        <svg class="chart-svg" id="humidityChart"></svg>
-      </div>
-      <div class="chart-container">
-        <div class="chart-header"><div class="chart-title">solar irradiance</div><div class="chart-note">previous 72 h as 1-hour means · archived past forecast · next 24 h forecast · 2 h vertical grid</div></div>
-        <svg class="chart-svg" id="solarChart"></svg>
-      </div>
-    </section>
-
-    <h2 class="section-title">model calibration</h2>
-    <section class="calibration-panel" aria-live="polite">
-      <div class="calibration-head">
-        <div>
-          <div class="calibration-mode" id="calibrationMode">auto-calibrated</div>
-          <div class="calibration-status" id="calibrationStatus">Collecting verified forecast results…</div>
-        </div>
-        <div class="calibration-actions">
-          <button class="button" id="calibrationPauseButton" type="button">pause</button>
-          <button class="button" id="calibrationRunButton" type="button">run calibration</button>
-          <button class="button" id="calibrationResetButton" type="button">reset balanced</button>
-        </div>
-      </div>
-      <div class="calibration-metrics">
-        <div class="calibration-metric"><div class="calibration-metric-label">verified hours</div><div class="calibration-metric-value" id="verifiedHoursValue">0 / 168</div></div>
-        <div class="calibration-metric"><div class="calibration-metric-label">cligMET temperature MAE</div><div class="calibration-metric-value" id="cligmetMaeValue">--</div></div>
-        <div class="calibration-metric"><div class="calibration-metric-label">Open-Meteo temperature MAE</div><div class="calibration-metric-value" id="modelMaeValue">--</div></div>
-        <div class="calibration-metric"><div class="calibration-metric-label">cligMET improvement</div><div class="calibration-metric-value" id="improvementValue">--</div></div>
-      </div>
-      <div class="coefficient-grid">
-        <div class="coefficient-item"><div class="coefficient-label">temperature adjustment</div><div class="coefficient-value" id="coefficientTemperatureOffset">+0.0 °C</div></div>
-        <div class="coefficient-item"><div class="coefficient-label">station influence</div><div class="coefficient-value" id="coefficientStationBias">100%</div></div>
-        <div class="coefficient-item"><div class="coefficient-label">pressure influence</div><div class="coefficient-value" id="coefficientPressure">30%</div></div>
-        <div class="coefficient-item"><div class="coefficient-label">temperature responsiveness</div><div class="coefficient-value" id="coefficientResponsiveness">1.5 °C/h</div></div>
-        <div class="coefficient-item"><div class="coefficient-label">rain influence</div><div class="coefficient-value" id="coefficientRain">20%</div></div>
-      </div>
-      <div class="calibration-chart-controls">
-        <div>coefficient history</div>
-        <label for="coefficientHistorySelect">show
-          <select id="coefficientHistorySelect">
-            <option value="station_bias_influence">station influence</option>
-            <option value="temperature_offset">temperature adjustment</option>
-            <option value="pressure_trend_influence">pressure influence</option>
-            <option value="temperature_responsiveness">temperature responsiveness</option>
-            <option value="local_rain_influence">rain influence</option>
-          </select>
-        </label>
-      </div>
-      <svg class="calibration-chart" id="coefficientHistoryChart" role="img" aria-label="Coefficient history"></svg>
-      <div class="calibration-note" id="calibrationNote">Automatic changes begin after seven days of unique verified forecast hours and are limited to small daily steps.</div>
-    </section>
-
-    <section class="observation-square closing-observation" aria-label="Meteorological observations: past and present">
-      <div class="central-image">
-        <img src="field-2.png" alt="field-2">
-      </div>
-      <div class="edge-box top">meteorological</div>
-      <div class="edge-box bottom">observations</div>
-      <div class="edge-box left">past</div>
-      <div class="edge-box right">present</div>
-    </section>
-
-  </main>
-
-  <dialog id="settingsDialog">
-    <form method="dialog" class="dialog-inner" id="settingsForm">
-      <h2>station settings</h2>
-      <label for="stationInput">Weather Underground station ID</label>
-      <input id="stationInput" autocomplete="off" value="ILONDO1066">
-      <label for="keyInput">Weather Underground API key</label>
-      <input id="keyInput" type="password" autocomplete="new-password" placeholder="enter or replace API key">
-      <p class="security-note">The key is sent only by the FastAPI server to api.weather.com and is stored in the server SQLite database. It is never returned to the webpage or chart API.</p>
-      <div class="dialog-actions">
-        <button class="button" value="cancel">cancel</button>
-        <button class="button" value="default" id="saveSettingsButton">save + sync</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="forecastControlsDialog">
-    <form method="dialog" class="dialog-inner" id="forecastControlsForm">
-      <h2>forecast model controls</h2>
-      <p class="model-note">Choose a preset, then optionally open the advanced settings. The temperature graph shows measured data, the cligMET forecast and an optional likely-range band.</p>
-
-      <div class="control-row">
-        <div class="control-head"><span class="control-name">model preset</span><span class="control-value" id="presetValue">Balanced</span></div>
-        <div class="preset-grid">
-          <button class="button preset-button" type="button" data-preset="conservative">conservative</button>
-          <button class="button preset-button" type="button" data-preset="balanced">balanced</button>
-          <button class="button preset-button" type="button" data-preset="local">local</button>
-          <button class="button preset-button" type="button" data-preset="auto">auto-calibrated</button>
-        </div>
-        <p class="preset-description" id="presetDescription">Balanced combines numerical-model guidance with restrained station and pressure corrections.</p>
-      </div>
-
-      <div class="control-row" style="margin-top:12px">
-        <div class="control-head"><span class="control-name">temperature graph display</span><span class="control-value">visible series</span></div>
-        <div class="option-grid">
-          <label class="option-label"><input id="showMeasuredInput" type="checkbox"> measured observations</label>
-          <label class="option-label"><input id="showAdjustedInput" type="checkbox"> cligMET forecast</label>
-          <label class="option-label"><input id="showUncertaintyInput" type="checkbox"> likely temperature range</label>
-        </div>
-      </div>
-
-      <details class="advanced-controls" id="advancedControls">
-        <summary>advanced model controls</summary>
-        <div class="control-grid">
-          <div class="control-row">
-            <div class="control-head"><label class="control-name" for="temperatureOffsetInput">temperature adjustment</label><span class="control-value" id="temperatureOffsetValue">0.0 °C</span></div>
-            <input id="temperatureOffsetInput" type="range" min="-5" max="5" step="0.1" value="0">
-            <p class="control-help">Moves the complete temperature forecast colder or warmer.</p>
-          </div>
-          <div class="control-row">
-            <div class="control-head"><label class="control-name" for="stationBiasInput">local station influence</label><span class="control-value" id="stationBiasValue">100%</span></div>
-            <input id="stationBiasInput" type="range" min="0" max="150" step="5" value="100">
-            <p class="control-help">Controls how much the present station-to-model temperature difference affects the first forecast hours.</p>
-          </div>
-          <div class="control-row">
-            <div class="control-head"><label class="control-name" for="pressureTrendInput">local pressure-trend influence</label><span class="control-value" id="pressureTrendValue">30%</span></div>
-            <input id="pressureTrendInput" type="range" min="0" max="100" step="5" value="30">
-            <p class="control-help">Blends the measured 3-, 6- and 12-hour barometric trend into modelled pressure.</p>
-          </div>
-          <div class="control-row">
-            <div class="control-head"><label class="control-name" for="temperatureResponsivenessInput">temperature responsiveness</label><span class="control-value" id="temperatureResponsivenessValue">1.5 °C/h</span></div>
-            <input id="temperatureResponsivenessInput" type="range" min="0.4" max="2.5" step="0.1" value="1.5">
-            <p class="control-help">Limits how quickly the forecast temperature may change from one hour to the next.</p>
-          </div>
-          <div class="control-row">
-            <div class="control-head"><label class="control-name" for="localRainInput">local rain-signal influence</label><span class="control-value" id="localRainValue">20%</span></div>
-            <input id="localRainInput" type="range" min="0" max="50" step="5" value="20">
-            <p class="control-help">Adds humidity, dew-point and falling-pressure signals from the station to modelled rain probability.</p>
+          <div class="metrics-grid">
+            <article class="metric"><h2 class="metric-label">Atmospheric pressure</h2><div class="metric-reading"><span id="pressureValue">—</span><span class="unit">hPa</span></div><p class="metric-note">Station observation</p></article>
+            <article class="metric"><h2 class="metric-label">Pressure change</h2><div class="metric-reading"><span id="pressureTrendValue">—</span><span class="unit">hPa</span></div><p class="metric-note" id="pressureTrendNote">Over the previous 3 hours</p></article>
+            <article class="metric"><h2 class="metric-label">Wind speed</h2><div class="metric-reading"><span id="windValue">—</span><span class="unit">km/h</span></div><p class="metric-note">Station observation</p></article>
+            <article class="metric"><h2 class="metric-label">Rain rate</h2><div class="metric-reading"><span id="rainValue">—</span><span class="unit">mm/h</span></div><p class="metric-note">At the latest observation</p></article>
           </div>
         </div>
-      </details>
-      <div class="dialog-actions split">
-        <div class="dialog-actions-left"><button class="button" type="button" id="resetForecastControlsButton">reset defaults</button></div>
-        <div class="dialog-actions-right"><button class="button" value="cancel">cancel</button><button class="button" type="button" id="applyForecastControlsButton">apply model</button></div>
-      </div>
-    </form>
-  </dialog>
+      </section>
 
-<script>
-  const NS = 'http://www.w3.org/2000/svg';
-  let historyPoints = [];
-  let forecastPoints = [];
-  let pastForecastPoints = [];
-  let pastForecastInfo = {};
-  const forecastPresets = {
-    conservative: {temperature_offset:0, station_bias_influence:0.25, pressure_trend_influence:0.15, temperature_responsiveness:1.0, local_rain_influence:0.10},
-    balanced: {temperature_offset:0, station_bias_influence:1.0, pressure_trend_influence:0.30, temperature_responsiveness:1.5, local_rain_influence:0.20},
-    local: {temperature_offset:0, station_bias_influence:1.25, pressure_trend_influence:0.65, temperature_responsiveness:2.0, local_rain_influence:0.40}
-  };
-  const presetDescriptions = {
-    conservative: 'Conservative stays close to the numerical weather model and applies only small local corrections.',
-    balanced: 'Balanced combines numerical-model guidance with restrained station and pressure corrections.',
-    local: 'Local gives the station temperature, pressure trend and rain signals more influence.',
-    auto: 'Auto-calibrated tracks forecast errors and makes small guarded coefficient changes after enough verified data has accumulated.'
-  };
-  const defaultForecastControls = {...forecastPresets.balanced};
-  const defaultDisplayOptions = {show_measured:true, show_adjusted:true, show_model:false, show_persistence:false, show_uncertainty:true};
-  let forecastControls = {...defaultForecastControls};
-  let displayOptions = {...defaultDisplayOptions};
-  let calibrationInfo = {mode:'auto', paused:false, status:'collecting', controls:{...defaultForecastControls}, metrics:{verified_hours:0, minimum_verified_hours:168}, history:[]};
-  let selectedCalibrationMode = 'auto';
-  let selectedControlSource = 'auto';
+      <section id="weather" class="weather-section" aria-labelledby="weatherTitle">
+        <div class="section-heading">
+          <div><p class="eyebrow">Observations &amp; forecasts</p><h2 id="weatherTitle">The weather, over time.</h2></div>
+        </div>
+        <div class="chart-toolbar">
+          <fieldset class="series-options">
+            <legend class="visually-hidden">Visible chart series</legend>
+            <label><input type="checkbox" id="showMeasured" checked><span class="legend-line observed" aria-hidden="true"></span>Measured</label>
+            <label><input type="checkbox" id="showForecast" checked><span class="legend-line forecast" aria-hidden="true"></span>cligMET forecast</label>
+            <label><input type="checkbox" id="showArchived" checked><span class="legend-line archived" aria-hidden="true"></span>Archived forecast</label>
+            <label><input type="checkbox" id="showRange" checked><span class="legend-band" aria-hidden="true"></span>Temperature range</label>
+          </fieldset>
+          <p class="chart-guidance">Hover or tap a chart to inspect. Use arrow keys when focused.</p>
+        </div>
+        <div class="charts-grid">
+          <article class="chart-card">
+            <header class="chart-heading"><h3 id="temperatureChartTitle">Dry-bulb temperature</h3><span class="chart-unit">°C</span></header>
 
-  const fmt = (value, digits = 1) => Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '--';
-  const signed = (value, digits = 1) => Number.isFinite(Number(value)) ? `${Number(value) >= 0 ? '+' : ''}${Number(value).toFixed(digits)}` : '--';
-  const localTime = value => value ? new Date(value).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '--';
+            <div class="plot-navigation" id="temperatureNavigation">
+              <label class="visually-hidden" for="temperaturePeriod">Temperature period</label>
+              <select id="temperaturePeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="plot-page-buttons">
+                <button type="button" class="button plot-arrow" id="temperaturePrevious" aria-label="Previous temperature period" title="Previous period">←</button>
+                <button type="button" class="button plot-latest" id="temperatureLatest">Latest</button>
+                <button type="button" class="button plot-arrow" id="temperatureNext" aria-label="Next temperature period" title="Next period">→</button>
+              </div>
+            </div>
+            <p class="plot-window" id="temperatureWindow"></p>
+            <p class="plot-coverage" id="temperatureCoverage" role="status" aria-live="polite"></p>
+            <svg class="chart" id="temperatureChart" role="img" aria-labelledby="temperatureChartTitle" aria-describedby="chartHelp temperatureReadout" tabindex="0"></svg>
+            <div class="chart-readout" id="temperatureReadout">Loading temperature…</div>
+          </article>
+          <article class="chart-card">
+            <header class="chart-heading"><h3 id="pressureChartTitle">Atmospheric pressure</h3><span class="chart-unit">hPa</span></header>
 
-  function approximatelyEqual(a, b) { return Math.abs(Number(a) - Number(b)) < 0.011; }
+            <div class="plot-navigation" id="pressureNavigation">
+              <label class="visually-hidden" for="pressurePeriod">Pressure period</label>
+              <select id="pressurePeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="plot-page-buttons">
+                <button type="button" class="button plot-arrow" id="pressurePrevious" aria-label="Previous pressure period" title="Previous period">←</button>
+                <button type="button" class="button plot-latest" id="pressureLatest">Latest</button>
+                <button type="button" class="button plot-arrow" id="pressureNext" aria-label="Next pressure period" title="Next period">→</button>
+              </div>
+            </div>
+            <p class="plot-window" id="pressureWindow"></p>
+            <p class="plot-coverage" id="pressureCoverage" role="status" aria-live="polite"></p>
+            <svg class="chart" id="pressureChart" role="img" aria-labelledby="pressureChartTitle" aria-describedby="chartHelp pressureReadout" tabindex="0"></svg>
+            <div class="chart-readout" id="pressureReadout">Loading pressure…</div>
+          </article>
+          <article class="chart-card">
+            <header class="chart-heading"><h3 id="humidityChartTitle">Relative humidity</h3><span class="chart-unit">%</span></header>
 
-  function currentPresetName(controls) {
-    for (const [name, values] of Object.entries(forecastPresets)) {
-      if (Object.keys(values).every(key => approximatelyEqual(controls[key], values[key]))) return name;
-    }
-    return 'custom';
-  }
+            <div class="plot-navigation" id="humidityNavigation">
+              <label class="visually-hidden" for="humidityPeriod">Humidity period</label>
+              <select id="humidityPeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="plot-page-buttons">
+                <button type="button" class="button plot-arrow" id="humidityPrevious" aria-label="Previous humidity period" title="Previous period">←</button>
+                <button type="button" class="button plot-latest" id="humidityLatest">Latest</button>
+                <button type="button" class="button plot-arrow" id="humidityNext" aria-label="Next humidity period" title="Next period">→</button>
+              </div>
+            </div>
+            <p class="plot-window" id="humidityWindow"></p>
+            <p class="plot-coverage" id="humidityCoverage" role="status" aria-live="polite"></p>
+            <svg class="chart" id="humidityChart" role="img" aria-labelledby="humidityChartTitle" aria-describedby="chartHelp humidityReadout" tabindex="0"></svg>
+            <div class="chart-readout" id="humidityReadout">Loading humidity…</div>
+          </article>
+          <article class="chart-card">
+            <header class="chart-heading"><h3 id="solarChartTitle">Solar irradiance</h3><span class="chart-unit">W/m²</span></header>
 
-  function updatePresetState() {
-    const controls = readForecastControlInputs();
-    const preset = currentPresetName(controls);
-    const active = selectedCalibrationMode === 'auto' ? 'auto' : preset;
-    document.querySelectorAll('.preset-button').forEach(button => button.classList.toggle('active', button.dataset.preset === active));
-    const label = active === 'auto' ? 'Auto-calibrated' : (active === 'custom' ? 'Custom' : active[0].toUpperCase() + active.slice(1));
-    document.getElementById('presetValue').textContent = label;
-    document.getElementById('presetDescription').textContent = presetDescriptions[active] || 'Custom uses the advanced values shown below.';
-  }
+            <div class="plot-navigation" id="solarNavigation">
+              <label class="visually-hidden" for="solarPeriod">Solar irradiance period</label>
+              <select id="solarPeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="plot-page-buttons">
+                <button type="button" class="button plot-arrow" id="solarPrevious" aria-label="Previous solar irradiance period" title="Previous period">←</button>
+                <button type="button" class="button plot-latest" id="solarLatest">Latest</button>
+                <button type="button" class="button plot-arrow" id="solarNext" aria-label="Next solar irradiance period" title="Next period">→</button>
+              </div>
+            </div>
+            <p class="plot-window" id="solarWindow"></p>
+            <p class="plot-coverage" id="solarCoverage" role="status" aria-live="polite"></p>
+            <svg class="chart" id="solarChart" role="img" aria-labelledby="solarChartTitle" aria-describedby="chartHelp solarReadout" tabindex="0"></svg>
+            <div class="chart-readout" id="solarReadout">Loading solar irradiance…</div>
+          </article>
+        </div>
+        <p id="chartHelp" class="visually-hidden">Arrow keys move through hourly readings. Home and End move to the first and last hour. Escape clears the selection.</p>
+        <div id="chartAnnouncement" class="visually-hidden" role="status" aria-live="polite"></div>
+        <div class="chart-footnotes"><p id="forecastNote">Station observations and forecasts. Each plot has its own time window.</p><p id="timezoneNote">Times are shown in your device’s local time.</p></div>
+      </section>
 
-  function applyPreset(name) {
-    if (name === 'auto') {
-      selectedCalibrationMode = 'auto';
-      selectedControlSource = 'auto';
-      updatePresetState();
-      document.getElementById('advancedControls').open = false;
-      return;
-    }
-    if (!forecastPresets[name]) return;
-    selectedCalibrationMode = 'manual';
-    selectedControlSource = name;
-    setForecastControlInputs(forecastPresets[name]);
-    document.getElementById('advancedControls').open = false;
-  }
+      <section id="calibration" class="calibration-section" aria-labelledby="calibrationTitle">
+        <div class="section-heading"><div><p class="eyebrow">Model performance</p><h2 id="calibrationTitle">A forecast you can check.</h2></div><span class="mode-badge" id="calibrationMode">Waiting for data</span></div>
+        <p class="section-intro" id="calibrationStatus">Loading verified forecast results…</p>
+        <div class="performance-grid">
+          <article class="performance-metric"><h3>Verified hours</h3><div class="performance-value" id="verifiedHours">—</div><p id="verifiedNote">Unique hours used for verification</p></article>
+          <article class="performance-metric"><h3>cligMET temperature error</h3><div class="performance-value"><span id="cligmetMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
+          <article class="performance-metric"><h3>Open-Meteo temperature error</h3><div class="performance-value"><span id="modelMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
+          <article class="performance-metric improvement-metric"><h3>cligMET improvement</h3><div class="performance-value"><span id="improvement">—</span><span class="unit">°C</span></div><p>Positive means a smaller error</p></article>
+        </div>
 
-  function setDisplayOptionInputs(options = defaultDisplayOptions) {
-    displayOptions = {...defaultDisplayOptions, ...options};
-    document.getElementById('showMeasuredInput').checked = displayOptions.show_measured;
-    document.getElementById('showAdjustedInput').checked = displayOptions.show_adjusted;
-        document.getElementById('showUncertaintyInput').checked = displayOptions.show_uncertainty;
-  }
+        <details class="model-details" id="modelDetails">
+          <summary><span>Model coefficients &amp; history</span><span class="summary-symbol" aria-hidden="true">+</span></summary>
+          <div class="details-content">
+            <dl class="coefficients-grid">
+              <div><dt>Temperature adjustment</dt><dd id="coefficientTemperature">—</dd></div>
+              <div><dt>Station influence</dt><dd id="coefficientStation">—</dd></div>
+              <div><dt>Pressure influence</dt><dd id="coefficientPressure">—</dd></div>
+              <div><dt>Temperature responsiveness</dt><dd id="coefficientResponsiveness">—</dd></div>
+              <div><dt>Rain influence</dt><dd id="coefficientRain">—</dd></div>
+            </dl>
+            <div class="coefficient-header"><h3 id="coefficientTitle">Coefficient history</h3><label for="coefficientSelect" class="visually-hidden">Coefficient to show</label><select id="coefficientSelect"><option value="station_bias_influence">Station influence</option><option value="temperature_offset">Temperature adjustment</option><option value="pressure_trend_influence">Pressure influence</option><option value="temperature_responsiveness">Temperature responsiveness</option><option value="local_rain_influence">Rain influence</option></select></div>
 
-  function readDisplayOptionInputs() {
-    return {
-      show_measured: document.getElementById('showMeasuredInput').checked,
-      show_adjusted: document.getElementById('showAdjustedInput').checked,
-      show_model: false,
-      show_persistence: false,
-      show_uncertainty: document.getElementById('showUncertaintyInput').checked
-    };
-  }
+            <div class="plot-navigation" id="coefficientNavigation">
+              <label class="visually-hidden" for="coefficientPeriod">Coefficient history period</label>
+              <select id="coefficientPeriod"><option value="all">All changes</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option></select>
+              <div class="plot-page-buttons">
+                <button type="button" class="button plot-arrow" id="coefficientPrevious" aria-label="Previous coefficient history period" title="Previous period">←</button>
+                <button type="button" class="button plot-latest" id="coefficientLatest">Latest</button>
+                <button type="button" class="button plot-arrow" id="coefficientNext" aria-label="Next coefficient history period" title="Next period">→</button>
+              </div>
+            </div>
+            <p class="plot-window" id="coefficientWindow"></p>
+            <p class="plot-coverage" id="coefficientCoverage" role="status" aria-live="polite"></p>
+            <svg id="coefficientChart" class="coefficient-chart" role="img" aria-labelledby="coefficientTitle" aria-describedby="coefficientDescription"></svg>
+            <p id="coefficientDescription" class="muted">Saved changes in the model’s coefficients.</p>
+            <p class="calibration-note" id="calibrationNote">Calibration information will appear when available.</p>
+          </div>
+        </details>
+      </section>
+    </main>
 
-  function setForecastControlInputs(controls = defaultForecastControls) {
-    forecastControls = {...defaultForecastControls, ...controls};
-    document.getElementById('temperatureOffsetInput').value = forecastControls.temperature_offset;
-    document.getElementById('stationBiasInput').value = forecastControls.station_bias_influence * 100;
-    document.getElementById('pressureTrendInput').value = forecastControls.pressure_trend_influence * 100;
-    document.getElementById('temperatureResponsivenessInput').value = forecastControls.temperature_responsiveness;
-    document.getElementById('localRainInput').value = forecastControls.local_rain_influence * 100;
-    updateForecastControlLabels();
-    updatePresetState();
-  }
-
-  function readForecastControlInputs() {
-    return {
-      temperature_offset: Number(document.getElementById('temperatureOffsetInput').value),
-      station_bias_influence: Number(document.getElementById('stationBiasInput').value) / 100,
-      pressure_trend_influence: Number(document.getElementById('pressureTrendInput').value) / 100,
-      temperature_responsiveness: Number(document.getElementById('temperatureResponsivenessInput').value),
-      local_rain_influence: Number(document.getElementById('localRainInput').value) / 100
-    };
-  }
-
-  function updateForecastControlLabels() {
-    const offset = Number(document.getElementById('temperatureOffsetInput').value);
-    document.getElementById('temperatureOffsetValue').textContent = `${offset >= 0 ? '+' : ''}${offset.toFixed(1)} °C`;
-    document.getElementById('stationBiasValue').textContent = `${Number(document.getElementById('stationBiasInput').value).toFixed(0)}%`;
-    document.getElementById('pressureTrendValue').textContent = `${Number(document.getElementById('pressureTrendInput').value).toFixed(0)}%`;
-    document.getElementById('temperatureResponsivenessValue').textContent = `${Number(document.getElementById('temperatureResponsivenessInput').value).toFixed(1)} °C/h`;
-    document.getElementById('localRainValue').textContent = `${Number(document.getElementById('localRainInput').value).toFixed(0)}%`;
-    updatePresetState();
-  }
-
-  function renderCalibration(data) {
-    calibrationInfo = {...calibrationInfo, ...(data || {})};
-    const controls = {...defaultForecastControls, ...(calibrationInfo.controls || {})};
-    const metrics = calibrationInfo.metrics || {};
-    const modeText = calibrationInfo.mode === 'auto' ? 'auto-calibrated' : 'manual coefficients';
-    document.getElementById('calibrationMode').textContent = modeText;
-    let statusText = 'Manual coefficient control is active.';
-    if (calibrationInfo.mode === 'auto') {
-      if (calibrationInfo.paused) statusText = 'Automatic calibration is paused. Existing coefficients remain in use.';
-      else if (calibrationInfo.status === 'collecting') statusText = `Collecting verified forecasts: ${metrics.verified_hours || 0} of ${metrics.minimum_verified_hours || 168} unique hours.`;
-      else statusText = 'Automatic calibration is active and checks the rolling verification window once per day.';
-    }
-    document.getElementById('calibrationStatus').textContent = statusText;
-    document.getElementById('calibrationPauseButton').textContent = calibrationInfo.paused ? 'resume' : 'pause';
-    document.getElementById('calibrationPauseButton').disabled = calibrationInfo.mode !== 'auto';
-    document.getElementById('verifiedHoursValue').textContent = `${metrics.verified_hours || 0} / ${metrics.minimum_verified_hours || 168}`;
-    document.getElementById('cligmetMaeValue').textContent = Number.isFinite(Number(metrics.cligmet_mae)) ? `${Number(metrics.cligmet_mae).toFixed(2)} °C` : '--';
-    document.getElementById('modelMaeValue').textContent = Number.isFinite(Number(metrics.model_mae)) ? `${Number(metrics.model_mae).toFixed(2)} °C` : '--';
-    const improvement = Number(metrics.improvement);
-    document.getElementById('improvementValue').textContent = Number.isFinite(improvement) ? `${improvement >= 0 ? '+' : ''}${improvement.toFixed(2)} °C` : '--';
-    document.getElementById('coefficientTemperatureOffset').textContent = `${controls.temperature_offset >= 0 ? '+' : ''}${Number(controls.temperature_offset).toFixed(1)} °C`;
-    document.getElementById('coefficientStationBias').textContent = `${Math.round(Number(controls.station_bias_influence) * 100)}%`;
-    document.getElementById('coefficientPressure').textContent = `${Math.round(Number(controls.pressure_trend_influence) * 100)}%`;
-    document.getElementById('coefficientResponsiveness').textContent = `${Number(controls.temperature_responsiveness).toFixed(1)} °C/h`;
-    document.getElementById('coefficientRain').textContent = `${Math.round(Number(controls.local_rain_influence) * 100)}%`;
-    const lastRun = calibrationInfo.last_run ? localTime(calibrationInfo.last_run) : 'not yet';
-    document.getElementById('calibrationNote').textContent = `Rolling window: ${metrics.calibration_days || 30} days · last automatic check: ${lastRun} · daily coefficient movements are limited.`;
-    drawCoefficientHistory();
-  }
-
-  function drawCoefficientHistory() {
-    const svg = document.getElementById('coefficientHistoryChart');
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const width = Math.max(320, svg.clientWidth || 760), height = 230;
-    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    const key = document.getElementById('coefficientHistorySelect').value;
-    const history = (calibrationInfo.history || []).filter(item => item && item.controls && Number.isFinite(Number(item.controls[key])));
-    if (!history.length) {
-      const text = svgEl('text', {x:width/2, y:height/2, 'text-anchor':'middle', fill:'#666', 'font-size':'13'});
-      text.textContent = 'Coefficient history will appear after the first saved snapshot.';
-      svg.appendChild(text);
-      return;
-    }
-    const values = history.map(item => Number(item.controls[key]));
-    let min = Math.min(...values), max = Math.max(...values);
-    if (Math.abs(max-min) < 0.001) { min -= Math.max(0.05, Math.abs(min)*0.08); max += Math.max(0.05, Math.abs(max)*0.08); }
-    const pad = (max-min)*0.12; min -= pad; max += pad;
-    const left=58, right=18, top=18, bottom=38;
-    const times = history.map(item => new Date(item.timestamp).getTime());
-    let tMin=Math.min(...times), tMax=Math.max(...times); if (tMax===tMin) tMax=tMin+86400000;
-    const x=t => left+(t-tMin)/(tMax-tMin)*(width-left-right);
-    const y=v => top+(max-v)/(max-min)*(height-top-bottom);
-    for (let i=0;i<=4;i++) {
-      const yy=top+i*(height-top-bottom)/4;
-      svg.appendChild(svgEl('line',{x1:left,y1:yy,x2:width-right,y2:yy,stroke:'rgba(0,0,0,.13)','stroke-width':'1'}));
-      const val=max-i*(max-min)/4;
-      const label=svgEl('text',{x:left-8,y:yy+4,'text-anchor':'end',fill:'#555','font-size':'10'});
-      const percentage = ['station_bias_influence','pressure_trend_influence','local_rain_influence'].includes(key);
-      label.textContent = percentage ? `${Math.round(val*100)}%` : val.toFixed(1);
-      svg.appendChild(label);
-    }
-    const d=history.map((item,index)=>`${index?'L':'M'} ${x(times[index]).toFixed(1)} ${y(Number(item.controls[key])).toFixed(1)}`).join(' ');
-    svg.appendChild(svgEl('path',{d,fill:'none',stroke:'#000','stroke-width':'2','stroke-linejoin':'round','stroke-linecap':'round'}));
-    history.forEach((item,index)=>svg.appendChild(svgEl('circle',{cx:x(times[index]),cy:y(Number(item.controls[key])),r:'3',fill:'#fff',stroke:'#000','stroke-width':'1.5'})));
-    const firstLabel=svgEl('text',{x:left,y:height-12,'text-anchor':'start',fill:'#555','font-size':'10'}); firstLabel.textContent=new Date(tMin).toLocaleDateString([], {day:'2-digit',month:'2-digit'}); svg.appendChild(firstLabel);
-    const lastLabel=svgEl('text',{x:width-right,y:height-12,'text-anchor':'end',fill:'#555','font-size':'10'}); lastLabel.textContent=new Date(tMax).toLocaleDateString([], {day:'2-digit',month:'2-digit'}); svg.appendChild(lastLabel);
-  }
-
-  function setStatus(text, error = false) {
-    const el = document.getElementById('statusLine');
-    el.textContent = text;
-    el.className = `status-line${error ? ' error' : ''}`;
-  }
-
-  const PUBLIC_SNAPSHOT_URL = String(window.CLIGMET_SNAPSHOT_URL || '').trim();
-  let snapshotCache = null;
-  let snapshotPromise = null;
-  let snapshotFetchedAt = 0;
-
-  async function fetchPublicSnapshot() {
-    if (!PUBLIC_SNAPSHOT_URL || PUBLIC_SNAPSHOT_URL.includes('YOUR-CLIGMET')) {
-      throw new Error('Set CLIGMET_SNAPSHOT_URL in config.js before deploying the public site.');
-    }
-    if (snapshotCache && Date.now() - snapshotFetchedAt < 10000) return snapshotCache;
-    if (!snapshotPromise) {
-      snapshotPromise = fetch(PUBLIC_SNAPSHOT_URL, {cache:'no-store'})
-        .then(async response => {
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.detail || `Snapshot service returned HTTP ${response.status}`);
-          snapshotCache = data;
-          snapshotFetchedAt = Date.now();
-          return data;
-        })
-        .finally(() => { snapshotPromise = null; });
-    }
-    return snapshotPromise;
-  }
-
-  function publicApiValue(url, snapshot) {
-    const path = new URL(url, window.location.href).pathname;
-    const mapping = {
-      '/api/settings': snapshot.settings,
-      '/api/status': {...(snapshot.status || {}), snapshot_generated_at:snapshot.generated_at},
-      '/api/current': snapshot.current,
-      '/api/history': snapshot.history,
-      '/api/forecast': snapshot.forecast,
-      '/api/past-forecast': snapshot.past_forecast,
-      '/api/calibration': snapshot.calibration,
-      '/api/forecast-controls': {forecast:snapshot.settings?.forecast || {}, calibration:snapshot.calibration},
-      '/api/display-options': {display:snapshot.settings?.display || {}},
-    };
-    if (!(path in mapping)) throw new Error(`The public site does not provide ${path}`);
-    return mapping[path];
-  }
-
-  async function jsonFetch(url, options = {}) {
-    const method = String(options.method || 'GET').toUpperCase();
-    if (method !== 'GET') {
-      throw new Error('The public website is read-only. Change settings on the home cligMET dashboard.');
-    }
-    return publicApiValue(url, await fetchPublicSnapshot());
-  }
-
-  function svgEl(name, attrs = {}) {
-    const el = document.createElementNS(NS, name);
-    Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
-    return el;
-  }
-
-  function drawLineChart(svg, observed, forecast, key, unit, options = {}) {
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const width = Math.max(640, svg.clientWidth || 900);
-    const height = Math.max(240, svg.clientHeight || 300);
-    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    const margin = {left: options.leftMargin ?? 58, right: 20, top: 15, bottom: 72};
-    const plotW = width - margin.left - margin.right;
-    const plotH = height - margin.top - margin.bottom;
-
-    const mapPoints = (points, valueKey) => points
-      .filter(p => p[valueKey] !== null && p[valueKey] !== undefined && Number.isFinite(Number(p[valueKey])))
-      .map(p => ({t:new Date(p.timestamp).getTime(), v:Number(p[valueKey])}));
-    const obs = mapPoints(observed, key);
-    const adjusted = mapPoints(forecast, key);
-    const extras = (options.extraSeries || []).map(series => ({
-      ...series,
-      points: mapPoints(series.data || forecast, series.key)
-    })).filter(series => series.points.length);
-    const lower = options.bandLowerKey ? mapPoints(forecast, options.bandLowerKey) : [];
-    const upper = options.bandUpperKey ? mapPoints(forecast, options.bandUpperKey) : [];
-    const all = obs.concat(adjusted, ...extras.map(series => series.points), lower, upper);
-    if (!all.length) {
-      const text = svgEl('text', {x:width/2, y:height/2, 'text-anchor':'middle', 'font-size':'16'});
-      text.textContent = 'no data available'; svg.appendChild(text); return;
-    }
-    let minT = Math.min(...all.map(p => p.t));
-    let maxT = Math.max(...all.map(p => p.t));
-    let minV = Math.min(...all.map(p => p.v));
-    let maxV = Math.max(...all.map(p => p.v));
-    if (options.min !== undefined) minV = options.min;
-    if (options.max !== undefined) maxV = options.max;
-    const padding = (maxV - minV || 1) * .08;
-    minV -= padding; maxV += padding;
-    const x = t => margin.left + (t - minT) / (maxT - minT || 1) * plotW;
-    const y = v => margin.top + (maxV - v) / (maxV - minV || 1) * plotH;
-
-    svg.appendChild(svgEl('rect', {x:margin.left, y:margin.top, width:plotW, height:plotH, fill:'#fff'}));
-    for (let i=0; i<=5; i++) {
-      const yy = margin.top + plotH * i / 5;
-      svg.appendChild(svgEl('line', {x1:margin.left, y1:yy, x2:width-margin.right, y2:yy, stroke:'#000', 'stroke-width':'.35'}));
-      const value = maxV - (maxV-minV) * i / 5;
-      const label = svgEl('text', {x:margin.left-8, y:yy+4, 'text-anchor':'end', 'font-size':'12', fill:'#000'});
-      label.textContent = `${value.toFixed(options.decimals ?? 1)}`;
-      svg.appendChild(label);
-    }
-    const gridStart = new Date(minT);
-    gridStart.setMinutes(0, 0, 0);
-    const startHour = gridStart.getHours();
-    if (startHour % 2 !== 0) gridStart.setHours(startHour + 1);
-    if (gridStart.getTime() < minT) gridStart.setHours(gridStart.getHours() + 2);
-    let gridIndex = 0;
-    for (let tick=gridStart.getTime(); tick<=maxT; ) {
-      const xx = x(tick);
-      svg.appendChild(svgEl('line', {x1:xx, y1:margin.top, x2:xx, y2:height-margin.bottom, stroke:'#000', 'stroke-width':'.25'}));
-      if (gridIndex % 2 === 0) {
-        const t = new Date(tick);
-        const labelY = height - margin.bottom + 10;
-        const label = svgEl('text', {x:xx, y:labelY, transform:`rotate(-45 ${xx} ${labelY})`, 'text-anchor':'end', 'font-size':'11', fill:'#000'});
-        const day = String(t.getDate()).padStart(2, '0');
-        const month = String(t.getMonth() + 1).padStart(2, '0');
-        const hour = String(t.getHours()).padStart(2, '0');
-        label.textContent = `${day}/${month} : ${hour}`;
-        svg.appendChild(label);
-      }
-      const next = new Date(tick); next.setHours(next.getHours()+2); tick = next.getTime(); gridIndex += 1;
-    }
-    const axisLabelX = options.axisLabelX ?? 14;
-    const axisLabel = svgEl('text', {x:axisLabelX, y:margin.top+plotH/2, transform:`rotate(-90 ${axisLabelX} ${margin.top+plotH/2})`, 'text-anchor':'middle', 'font-size':'13'});
-    axisLabel.textContent = unit; svg.appendChild(axisLabel);
-
-    function pathFor(points) { return points.map((p,i) => `${i?'L':'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' '); }
-    if (options.showBand && lower.length && upper.length) {
-      const lowerMap = new Map(lower.map(p => [p.t, p.v]));
-      const pairs = upper.filter(p => lowerMap.has(p.t));
-      if (pairs.length) {
-        const upperPath = pairs.map((p,i) => `${i?'L':'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
-        const lowerPath = pairs.slice().reverse().map(p => `L${x(p.t).toFixed(1)},${y(lowerMap.get(p.t)).toFixed(1)}`).join(' ');
-        svg.appendChild(svgEl('path', {d:`${upperPath}${lowerPath}Z`, fill:'rgba(0,0,0,.10)', stroke:'none'}));
-      }
-    }
-    if (obs.length) svg.appendChild(svgEl('path', {d:pathFor(obs), fill:'none', stroke:options.stroke || '#000', 'stroke-width':'1.45'}));
-    if (adjusted.length) {
-      svg.appendChild(svgEl('path', {d:pathFor(adjusted), fill:'none', stroke:options.forecastStroke || '#000', 'stroke-width':'1.7', 'stroke-dasharray':'7 5', 'stroke-linejoin':'round', 'stroke-linecap':'round'}));
-      adjusted.forEach(p => svg.appendChild(svgEl('circle', {cx:x(p.t), cy:y(p.v), r:'2.8', fill:'#fff', stroke:options.forecastStroke || '#000', 'stroke-width':'1.2'})));
-    }
-    extras.forEach(series => svg.appendChild(svgEl('path', {d:pathFor(series.points), fill:'none', stroke:series.stroke || '#777', 'stroke-width':series.width || '1.35', 'stroke-dasharray':series.dash || '3 4', 'stroke-linejoin':'round'})));
-    const boundarySeries = adjusted.length ? adjusted : extras.length ? extras[0].points : [];
-    if (obs.length && boundarySeries.length) {
-      const boundary = x(boundarySeries[0].t);
-      svg.appendChild(svgEl('line', {x1:boundary, y1:margin.top, x2:boundary, y2:height-margin.bottom, stroke:'#000', 'stroke-width':'.8', 'stroke-dasharray':'2 5'}));
-    }
-  }
-
-  function drawHeroPressure() {
-    return;
-  }
-
-  function renderForecast(data) {
-    // Forecast points remain available to the graphs, but the separate forecast-card section has been removed.
-    forecastPoints = data.available ? (data.points || []) : [];
-  }
-
-  function renderTemperatureLegend() {
-    const items = [];
-    if (displayOptions.show_measured) items.push('<span class="legend-item"><span class="legend-line"></span>measured</span>');
-    if (pastForecastPoints.length) {
-      const issued = pastForecastInfo.issued_at ? ` · issued ${localTime(pastForecastInfo.issued_at)}` : '';
-      items.push(`<span class="legend-item"><span class="legend-line archived"></span>archived cligMET${issued}</span>`);
-    }
-    if (displayOptions.show_adjusted) items.push('<span class="legend-item"><span class="legend-line adjusted"></span>cligMET</span>');
-    if (displayOptions.show_uncertainty) items.push('<span class="legend-item"><span class="legend-band"></span>likely range</span>');
-    document.getElementById('temperatureLegend').innerHTML = items.join('');
-  }
-
-  function renderCharts() {
-    const observed = displayOptions.show_measured ? historyPoints.map(p => ({...p, timestamp:p.timestamp})) : [];
-    const adjusted = displayOptions.show_adjusted ? forecastPoints : [];
-    drawLineChart(document.getElementById('temperatureChart'), observed, adjusted, 'temperature', 'temperature °C', {
-      decimals:0,
-      extraSeries:[{key:'temperature', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}],
-      showBand:displayOptions.show_uncertainty,
-      bandLowerKey:'temperature_lower', bandUpperKey:'temperature_upper'
-    });
-    drawLineChart(document.getElementById('pressureChart'), observed, adjusted, 'pressure', 'pressure hPa', {
-      decimals:2,
-      leftMargin:94,
-      axisLabelX:16,
-      extraSeries:[{key:'pressure', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
-    });
-    drawLineChart(document.getElementById('humidityChart'), observed, adjusted, 'humidity', 'humidity %', {
-      min:0,
-      max:100,
-      decimals:0,
-      extraSeries:[{key:'humidity', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
-    });
-    drawLineChart(document.getElementById('solarChart'), observed, adjusted, 'solar_radiation', 'irradiance W/m²', {
-      min:0,
-      decimals:0,
-      extraSeries:[{key:'solar_radiation', data:pastForecastPoints, stroke:'#666', dash:'2 4', width:'1.6'}]
-    });
-    renderTemperatureLegend();
-    drawHeroPressure();
-  }
-
-  async function loadAll() {
-    try {
-      const [settings, status, current, history, forecast, calibration, pastForecast] = await Promise.all([
-        jsonFetch('/api/settings'), jsonFetch('/api/status'), jsonFetch('/api/current'),
-        jsonFetch('/api/history?hours=72&interval=1'), jsonFetch('/api/forecast?hours=24&interval=1'),
-        jsonFetch('/api/calibration'), jsonFetch('/api/past-forecast?hours=24')
-      ]);
-      document.getElementById('stationInput').value = settings.station_id || 'ILONDO1066';
-      document.getElementById('headingStation').textContent = `station ${settings.station_id || '—'} · remote weather dashboard`;
-      selectedCalibrationMode = (settings.calibration && settings.calibration.mode) || calibration.mode || 'auto';
-      selectedControlSource = selectedCalibrationMode === 'auto' ? 'auto' : currentPresetName(settings.forecast || defaultForecastControls);
-      setForecastControlInputs(settings.forecast || defaultForecastControls);
-      setDisplayOptionInputs(settings.display || defaultDisplayOptions);
-      renderCalibration(calibration);
-      if (!settings.configured) {
-        setStatus('Enter your Weather Underground API key to start collecting data.', true);
-        setStatus('The home cligMET publisher is not configured yet.', true);
-      } else if (status.last_error && current.available) {
-        const observed = current.observation && current.observation.timestamp ? localTime(current.observation.timestamp) : 'stored reading';
-        setStatus(`Station ${settings.station_id} · cached observation ${observed} · live refresh failed`, true);
-      } else if (status.last_error) {
-        setStatus(`Station ${settings.station_id} · ${status.last_error}`, true);
-      } else if (status.syncing) {
-        setStatus(`Station ${settings.station_id} · home server is synchronising data…`);
-      } else {
-        const snapshotTime = status.snapshot_generated_at ? new Date(status.snapshot_generated_at).getTime() : 0;
-        const snapshotAgeMinutes = snapshotTime ? Math.floor((Date.now() - snapshotTime) / 60000) : null;
-        if (snapshotAgeMinutes !== null && snapshotAgeMinutes > 15) {
-          setStatus(`Station ${settings.station_id} · data is ${snapshotAgeMinutes} minutes old`, true);
-        } else {
-          setStatus(`Station ${settings.station_id} · last update ${status.last_success ? localTime(status.last_success) : 'waiting for first reading'}`);
-        }
-      }
-
-      if (current.available) {
-        const o = current.observation;
-        document.getElementById('solarValue').textContent = `irradiance: ${fmt(o.solar_radiation,0)} W/m²`;
-        document.getElementById('timeValue').textContent = `observation: ${localTime(o.timestamp)}`;
-        document.getElementById('temperatureValue').textContent = `dry-bulb temperature: ${fmt(o.temperature,1)}°C`;
-        document.getElementById('humidityValue').textContent = `relative humidity: ${fmt(o.humidity,0)}%`;
-        document.getElementById('pressureValue').textContent = fmt(o.pressure,1);
-        document.getElementById('pressureTrend3').textContent = signed(current.trends.change_3h,1);
-        document.getElementById('windValue').textContent = fmt(o.wind_speed,1);
-        document.getElementById('rainValue').textContent = fmt(o.precip_rate,1);
-      }
-      historyPoints = history.points || [];
-      pastForecastInfo = pastForecast || {};
-      pastForecastPoints = pastForecast.available ? (pastForecast.points || []) : [];
-      renderForecast(forecast);
-      renderCharts();
-    } catch (error) {
-      setStatus(error.message, true);
-    }
-  }
-
-  ['temperatureOffsetInput','stationBiasInput','pressureTrendInput','temperatureResponsivenessInput','localRainInput'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => { selectedCalibrationMode = 'manual'; selectedControlSource = 'manual'; updateForecastControlLabels(); });
-  });
-  document.querySelectorAll('.preset-button').forEach(button => button.addEventListener('click', () => applyPreset(button.dataset.preset)));
-  document.getElementById('forecastControlsButton').addEventListener('click', () => {
-    selectedCalibrationMode = calibrationInfo.mode || 'auto';
-    selectedControlSource = selectedCalibrationMode === 'auto' ? 'auto' : currentPresetName(forecastControls);
-    setForecastControlInputs(forecastControls);
-    setDisplayOptionInputs(displayOptions);
-    document.getElementById('forecastControlsDialog').showModal();
-  });
-  document.getElementById('resetForecastControlsButton').addEventListener('click', () => {
-    selectedCalibrationMode = 'manual';
-    selectedControlSource = 'balanced';
-    setForecastControlInputs(defaultForecastControls);
-    setDisplayOptionInputs(defaultDisplayOptions);
-  });
-  document.getElementById('applyForecastControlsButton').addEventListener('click', async () => {
-    try {
-      const controls = readForecastControlInputs();
-      const display = readDisplayOptionInputs();
-      setStatus('recalculating forecast with adjusted model controls…');
-      const [modelResult, displayResult] = await Promise.all([
-        jsonFetch('/api/forecast-controls', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({forecast:controls, calibration_mode:selectedCalibrationMode, source:selectedControlSource})}),
-        jsonFetch('/api/display-options', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(display)})
-      ]);
-      forecastControls = modelResult.forecast || controls;
-      if (modelResult.calibration) calibrationInfo = modelResult.calibration;
-      displayOptions = displayResult.display || display;
-      document.getElementById('forecastControlsDialog').close();
-      await loadAll();
-    } catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('coefficientHistorySelect').addEventListener('change', drawCoefficientHistory);
-  document.getElementById('calibrationPauseButton').addEventListener('click', async () => {
-    try {
-      const action = calibrationInfo.paused ? 'resume' : 'pause';
-      const result = await jsonFetch('/api/calibration', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action})});
-      renderCalibration(result.calibration);
-    } catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('calibrationRunButton').addEventListener('click', async () => {
-    try {
-      setStatus('checking verified forecast performance…');
-      const result = await jsonFetch('/api/calibration', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'run'})});
-      renderCalibration(result.calibration);
-      setStatus(result.message || 'Calibration check complete.');
-      await loadAll();
-    } catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('calibrationResetButton').addEventListener('click', async () => {
-    try {
-      const result = await jsonFetch('/api/calibration', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'reset'})});
-      renderCalibration(result.calibration);
-      await loadAll();
-    } catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('settingsButton').addEventListener('click', () => document.getElementById('settingsDialog').showModal());
-  document.getElementById('refreshButton').addEventListener('click', async () => {
-    try { await jsonFetch('/api/refresh', {method:'POST'}); setStatus('refresh started…'); setTimeout(loadAll, 2500); }
-    catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('saveSettingsButton').addEventListener('click', async event => {
-    event.preventDefault();
-    try {
-      const station = document.getElementById('stationInput').value.trim().toUpperCase();
-      const payload = {station_id: station, api_key: document.getElementById('keyInput').value};
-      setStatus(`Station ${station} · downloading current and historical data…`);
-      const result = await jsonFetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-      document.getElementById('keyInput').value = '';
-      document.getElementById('settingsDialog').close();
-      await loadAll();
-      if (!result.sync_ok && result.sync_error) {
-        setStatus(`Station ${station} · ${result.sync_error}`, true);
-      }
-    } catch (error) { setStatus(error.message, true); }
-  });
-  document.getElementById('docsButton').addEventListener('click', () => {
-    window.open('/docs', '_blank', 'noopener');
-  });
-  window.addEventListener('resize', () => requestAnimationFrame(() => { renderCharts(); drawCoefficientHistory(); }));
-
-  ['refreshButton','settingsButton','forecastControlsButton','docsButton','calibrationPauseButton','calibrationRunButton','calibrationResetButton']
-    .forEach(id => { const element = document.getElementById(id); if (element) element.style.display = 'none'; });
-
-  loadAll();
-  setInterval(loadAll, 60000);
-</script>
+    <footer class="site-footer"><div><a class="footer-wordmark" href="#">cligMET</a><p>Past. Present. Forecast.</p></div><div class="footer-detail"><span id="footerStation">Local weather observations</span><span>Refreshes every minute while this page is visible</span><a href="#observations">Back to observations ↑</a></div></footer>
+  </div>
+  <noscript><div class="noscript">Enable JavaScript to load the weather observations and forecasts.</div></noscript>
 </body>
 </html>
