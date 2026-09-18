@@ -21,6 +21,7 @@
         <span class="eyebrow">Meteorological observations</span>
         <span class="station-name" id="stationName">Station —</span>
         <span class="muted" id="todayLabel">Past, present &amp; forecast</span>
+        <span class="technical-meta" id="stationMeta">STN — · TZ — · UPDATE 60S</span>
       </div>
     </header>
 
@@ -39,32 +40,30 @@
     <main>
       <section id="observations" class="observations" aria-labelledby="observationsTitle">
         <div class="section-heading overview-heading">
-          <h1 id="observationsTitle">Current conditions</h1>
-          <span class="status-badge" id="dataBadge">Connecting</span>
+          <div>
+            <p class="eyebrow">Live station console</p>
+            <h1 id="observationsTitle">Current conditions</h1>
+          </div>
+          <span class="status-badge" id="dataBadge">CONNECTING</span>
         </div>
         <div class="status-line" id="statusLine" role="status" aria-live="polite">Loading the latest station reading…</div>
 
-        <div class="overview-grid" id="weatherOverview" aria-busy="true">
-          <article class="current-panel">
-            <div class="primary-reading">
-              <h2 class="metric-label">Dry-bulb temperature</h2>
-              <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
-              <p class="reading-time" id="observationTime">Waiting for an observation</p>
-            </div>
-            <figure class="field-art"><img src="assets/field-1.png" width="560" height="593" alt="" fetchpriority="high"><figcaption>cligMET / field 01</figcaption></figure>
-            <div class="secondary-readings">
-              <div><h2 class="metric-label">Relative humidity</h2><div class="secondary-value"><span id="humidityValue">—</span><span class="unit">%</span></div></div>
-              <div><h2 class="metric-label">Solar irradiance</h2><div class="secondary-value"><span id="solarValue">—</span><span class="unit">W/m²</span></div></div>
-            </div>
-          </article>
-
-          <div class="metrics-grid">
-            <article class="metric"><h2 class="metric-label">Atmospheric pressure</h2><div class="metric-reading"><span id="pressureValue">—</span><span class="unit">hPa</span></div><p class="metric-note">Station observation</p></article>
-            <article class="metric"><h2 class="metric-label">Pressure change</h2><div class="metric-reading"><span id="pressureTrendValue">—</span><span class="unit">hPa</span></div><p class="metric-note" id="pressureTrendNote">Over the previous 3 hours</p></article>
-            <article class="metric"><h2 class="metric-label">Wind speed</h2><div class="metric-reading"><span id="windValue">—</span><span class="unit">km/h</span></div><p class="metric-note">Station observation</p></article>
-            <article class="metric"><h2 class="metric-label">Rain rate</h2><div class="metric-reading"><span id="rainValue">—</span><span class="unit">mm/h</span></div><p class="metric-note">At the latest observation</p></article>
+        <article class="current-panel" id="weatherOverview" aria-busy="true">
+          <div class="primary-reading">
+            <div class="register-label"><span>TEMP</span><span>DRY BULB</span></div>
+            <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
+            <p class="reading-time" id="observationTime">Waiting for an observation</p>
           </div>
-        </div>
+
+          <div class="measurement-matrix" aria-label="Current station measurements">
+            <div class="measurement-row"><span class="measurement-code">RH</span><span class="measurement-name">Relative humidity</span><span class="measurement-value" id="humidityValue">—</span><span class="measurement-unit">%</span></div>
+            <div class="measurement-row"><span class="measurement-code">PRES</span><span class="measurement-name">Atmospheric pressure</span><span class="measurement-value" id="pressureValue">—</span><span class="measurement-unit">hPa</span></div>
+            <div class="measurement-row"><span class="measurement-code">ΔP3H</span><span class="measurement-name" id="pressureTrendNote">Pressure change · previous 3 hours</span><span class="measurement-value" id="pressureTrendValue">—</span><span class="measurement-unit">hPa</span></div>
+            <div class="measurement-row"><span class="measurement-code">WIND</span><span class="measurement-name">Wind speed</span><span class="measurement-value" id="windValue">—</span><span class="measurement-unit">km/h</span></div>
+            <div class="measurement-row"><span class="measurement-code">RAIN</span><span class="measurement-name">Rain rate</span><span class="measurement-value" id="rainValue">—</span><span class="measurement-unit">mm/h</span></div>
+            <div class="measurement-row"><span class="measurement-code">SOL</span><span class="measurement-name">Solar irradiance</span><span class="measurement-value" id="solarValue">—</span><span class="measurement-unit">W/m²</span></div>
+          </div>
+        </article>
       </section>
 
       <section id="weather" class="weather-section" aria-labelledby="weatherTitle">
@@ -79,7 +78,7 @@
             <label><input type="checkbox" id="showArchived" checked><span class="legend-line archived" aria-hidden="true"></span>Archived forecast</label>
             <label><input type="checkbox" id="showRange" checked><span class="legend-band" aria-hidden="true"></span>Temperature range</label>
           </fieldset>
-          <p class="chart-guidance">Hover or tap a chart to inspect. Use arrow keys when focused.</p>
+          <p class="chart-guidance">POINTER / TAP TO INSPECT · ← → WHEN FOCUSED</p>
         </div>
         <div class="charts-grid">
           <article class="chart-card">
@@ -87,10 +86,11 @@
 
             <div class="plot-navigation" id="temperatureNavigation">
               <label class="visually-hidden" for="temperaturePeriod">Temperature period</label>
-              <select id="temperaturePeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <select id="temperaturePeriod" class="visually-hidden period-select"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="period-strip" role="group" aria-label="Temperature period"><button type="button" class="period-button" data-period-target="temperature" data-period="day" aria-pressed="false">24H</button><button type="button" class="period-button" data-period-target="temperature" data-period="recent" aria-pressed="true">72H</button><button type="button" class="period-button" data-period-target="temperature" data-period="week" aria-pressed="false">7D</button><button type="button" class="period-button" data-period-target="temperature" data-period="month" aria-pressed="false">30D</button><button type="button" class="period-button" data-period-target="temperature" data-period="year" aria-pressed="false">1Y</button><button type="button" class="period-button" data-period-target="temperature" data-period="forecast" aria-pressed="false">FCST</button></div>
               <div class="plot-page-buttons">
                 <button type="button" class="button plot-arrow" id="temperaturePrevious" aria-label="Previous temperature period" title="Previous period">←</button>
-                <button type="button" class="button plot-latest" id="temperatureLatest">Latest</button>
+                <button type="button" class="button plot-latest" id="temperatureLatest">NOW</button>
                 <button type="button" class="button plot-arrow" id="temperatureNext" aria-label="Next temperature period" title="Next period">→</button>
               </div>
             </div>
@@ -104,10 +104,11 @@
 
             <div class="plot-navigation" id="pressureNavigation">
               <label class="visually-hidden" for="pressurePeriod">Pressure period</label>
-              <select id="pressurePeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <select id="pressurePeriod" class="visually-hidden period-select"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="period-strip" role="group" aria-label="Pressure period"><button type="button" class="period-button" data-period-target="pressure" data-period="day" aria-pressed="false">24H</button><button type="button" class="period-button" data-period-target="pressure" data-period="recent" aria-pressed="true">72H</button><button type="button" class="period-button" data-period-target="pressure" data-period="week" aria-pressed="false">7D</button><button type="button" class="period-button" data-period-target="pressure" data-period="month" aria-pressed="false">30D</button><button type="button" class="period-button" data-period-target="pressure" data-period="year" aria-pressed="false">1Y</button><button type="button" class="period-button" data-period-target="pressure" data-period="forecast" aria-pressed="false">FCST</button></div>
               <div class="plot-page-buttons">
                 <button type="button" class="button plot-arrow" id="pressurePrevious" aria-label="Previous pressure period" title="Previous period">←</button>
-                <button type="button" class="button plot-latest" id="pressureLatest">Latest</button>
+                <button type="button" class="button plot-latest" id="pressureLatest">NOW</button>
                 <button type="button" class="button plot-arrow" id="pressureNext" aria-label="Next pressure period" title="Next period">→</button>
               </div>
             </div>
@@ -121,10 +122,11 @@
 
             <div class="plot-navigation" id="humidityNavigation">
               <label class="visually-hidden" for="humidityPeriod">Humidity period</label>
-              <select id="humidityPeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <select id="humidityPeriod" class="visually-hidden period-select"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="period-strip" role="group" aria-label="Humidity period"><button type="button" class="period-button" data-period-target="humidity" data-period="day" aria-pressed="false">24H</button><button type="button" class="period-button" data-period-target="humidity" data-period="recent" aria-pressed="true">72H</button><button type="button" class="period-button" data-period-target="humidity" data-period="week" aria-pressed="false">7D</button><button type="button" class="period-button" data-period-target="humidity" data-period="month" aria-pressed="false">30D</button><button type="button" class="period-button" data-period-target="humidity" data-period="year" aria-pressed="false">1Y</button><button type="button" class="period-button" data-period-target="humidity" data-period="forecast" aria-pressed="false">FCST</button></div>
               <div class="plot-page-buttons">
                 <button type="button" class="button plot-arrow" id="humidityPrevious" aria-label="Previous humidity period" title="Previous period">←</button>
-                <button type="button" class="button plot-latest" id="humidityLatest">Latest</button>
+                <button type="button" class="button plot-latest" id="humidityLatest">NOW</button>
                 <button type="button" class="button plot-arrow" id="humidityNext" aria-label="Next humidity period" title="Next period">→</button>
               </div>
             </div>
@@ -138,10 +140,11 @@
 
             <div class="plot-navigation" id="solarNavigation">
               <label class="visually-hidden" for="solarPeriod">Solar irradiance period</label>
-              <select id="solarPeriod"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <select id="solarPeriod" class="visually-hidden period-select"><option value="day">24 hours</option><option value="recent" selected>3 days</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option><option value="forecast">Forecast only</option></select>
+              <div class="period-strip" role="group" aria-label="Solar irradiance period"><button type="button" class="period-button" data-period-target="solar" data-period="day" aria-pressed="false">24H</button><button type="button" class="period-button" data-period-target="solar" data-period="recent" aria-pressed="true">72H</button><button type="button" class="period-button" data-period-target="solar" data-period="week" aria-pressed="false">7D</button><button type="button" class="period-button" data-period-target="solar" data-period="month" aria-pressed="false">30D</button><button type="button" class="period-button" data-period-target="solar" data-period="year" aria-pressed="false">1Y</button><button type="button" class="period-button" data-period-target="solar" data-period="forecast" aria-pressed="false">FCST</button></div>
               <div class="plot-page-buttons">
                 <button type="button" class="button plot-arrow" id="solarPrevious" aria-label="Previous solar irradiance period" title="Previous period">←</button>
-                <button type="button" class="button plot-latest" id="solarLatest">Latest</button>
+                <button type="button" class="button plot-latest" id="solarLatest">NOW</button>
                 <button type="button" class="button plot-arrow" id="solarNext" aria-label="Next solar irradiance period" title="Next period">→</button>
               </div>
             </div>
@@ -180,10 +183,11 @@
 
             <div class="plot-navigation" id="coefficientNavigation">
               <label class="visually-hidden" for="coefficientPeriod">Coefficient history period</label>
-              <select id="coefficientPeriod"><option value="all">All changes</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option></select>
+              <select id="coefficientPeriod" class="visually-hidden period-select"><option value="all" selected>All changes</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option></select>
+              <div class="period-strip" role="group" aria-label="Coefficient history period"><button type="button" class="period-button" data-period-target="coefficient" data-period="all" aria-pressed="true">ALL</button><button type="button" class="period-button" data-period-target="coefficient" data-period="week" aria-pressed="false">7D</button><button type="button" class="period-button" data-period-target="coefficient" data-period="month" aria-pressed="false">30D</button><button type="button" class="period-button" data-period-target="coefficient" data-period="year" aria-pressed="false">1Y</button></div>
               <div class="plot-page-buttons">
                 <button type="button" class="button plot-arrow" id="coefficientPrevious" aria-label="Previous coefficient history period" title="Previous period">←</button>
-                <button type="button" class="button plot-latest" id="coefficientLatest">Latest</button>
+                <button type="button" class="button plot-latest" id="coefficientLatest">NOW</button>
                 <button type="button" class="button plot-arrow" id="coefficientNext" aria-label="Next coefficient history period" title="Next period">→</button>
               </div>
             </div>
