@@ -2301,3 +2301,298 @@ body { background: var(--page); }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Final art-direction polish — rhythm, chart typography, alignment and mobile. */
+:root {
+  --section-space: clamp(72px, 8vw, 112px);
+  --micro-size: .6rem;
+}
+
+/* Keep the page moving on one consistent vertical rhythm. */
+.observations,
+.weather-section,
+.calibration-section {
+  padding-top: var(--section-space);
+}
+.section-register {
+  margin-bottom: 24px;
+}
+.current-panel {
+  gap: clamp(42px, 5.5vw, 80px);
+}
+.weather-section { padding-top: clamp(86px, 9vw, 124px); }
+.calibration-section { padding-top: clamp(88px, 9vw, 122px); }
+
+/* Current-condition typography: pressure leads, the rest share a family. */
+.measurement-matrix {
+  gap: 28px 22px;
+}
+.measurement-row {
+  grid-template-columns: minmax(64px, 1fr) auto auto;
+}
+.measurement-code,
+.measurement-name,
+.measurement-unit,
+.reading-time,
+.status-badge,
+.section-ref,
+.technical-meta {
+  font-size: var(--micro-size);
+}
+.measurement-code {
+  letter-spacing: .055em;
+}
+.measurement-name {
+  line-height: 1.15;
+  color: var(--muted);
+}
+.measurement-unit {
+  align-self: end;
+  padding-bottom: .12em;
+}
+.primary-reading-foot {
+  margin-top: 16px;
+}
+
+/* Chart labels become one quiet technical typographic system. */
+.chart {
+  font-family: var(--font-display);
+}
+.chart-axis-label,
+.chart-empty-label {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: .02em;
+}
+.chart-axis-time {
+  font-variant-numeric: tabular-nums;
+}
+.chart-axis-value {
+  font-variant-numeric: tabular-nums;
+}
+.chart-empty-label {
+  letter-spacing: .04em;
+}
+.chart-heading h3 {
+  letter-spacing: -.045em;
+}
+.chart-card:nth-child(1) .chart-heading h3 {
+  letter-spacing: -.08em;
+}
+.chart-unit,
+.plot-window,
+.chart-readout {
+  font-variant-numeric: tabular-nums;
+}
+.plot-window {
+  min-height: 1.1em;
+  letter-spacing: .015em;
+}
+.chart-readout {
+  min-height: 32px;
+  padding-top: 5px;
+  line-height: 1.35;
+}
+
+/* Period controls align as one line of typeset metadata. */
+.plot-navigation {
+  min-height: 29px;
+}
+.period-strip {
+  gap: 11px;
+}
+.period-button,
+.plot-page-buttons .button {
+  min-height: 23px;
+  line-height: 1;
+}
+.period-button[aria-pressed="true"] {
+  text-underline-offset: 3px;
+}
+.chart-toolbar {
+  min-height: 28px;
+}
+.series-options {
+  align-items: baseline;
+  gap: 10px 20px;
+}
+.series-options label {
+  min-height: 18px;
+  font-size: var(--micro-size);
+}
+
+/* Maintain asymmetry without breaking the shared visual baseline. */
+.chart-card:nth-child(2) .chart-heading,
+.chart-card:nth-child(3) .chart-heading {
+  border-bottom-width: 2px;
+}
+.chart-card:nth-child(4) {
+  margin-top: 8px;
+}
+.chart-card:nth-child(4) .chart-heading {
+  border-bottom-width: 3px;
+}
+.performance-grid {
+  align-items: end;
+}
+.performance-metric {
+  min-height: 126px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.performance-metric h3 {
+  line-height: 1.15;
+}
+.performance-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Details are secondary, but line up with the same right edge as the metrics. */
+.model-details {
+  margin-top: 38px;
+}
+.coefficients-grid dt,
+.coefficient-header,
+.model-details summary {
+  font-size: var(--micro-size);
+}
+
+/* Footer is visually present without becoming another section. */
+.site-footer {
+  margin-top: clamp(72px, 9vw, 120px);
+  padding-top: 8px;
+}
+
+/* Tablet: preserve hierarchy but reduce dead space. */
+@media (max-width: 900px) {
+  :root { --section-space: 64px; }
+  .section-register { margin-bottom: 18px; }
+  .current-panel { gap: 32px; }
+  .measurement-matrix { gap: 22px 24px; }
+  .charts-grid { gap: 38px; }
+  .chart-card:nth-child(4) { margin-top: 0; }
+  .performance-metric { min-height: 112px; }
+}
+
+/* Mobile is deliberately composed rather than simply collapsed. */
+@media (max-width: 620px) {
+  :root {
+    --section-space: 52px;
+    --micro-size: .575rem;
+  }
+  .site-shell {
+    padding-inline: 16px;
+  }
+  .masthead {
+    padding-top: 12px;
+    padding-bottom: 14px;
+    border-bottom-width: 3px;
+  }
+  .wordmark {
+    margin-bottom: 22px;
+    font-size: clamp(6rem, 28vw, 8.8rem);
+  }
+  .masthead-meta {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 14px;
+    align-items: baseline;
+  }
+  .masthead-meta .station-name,
+  .masthead-meta .technical-meta {
+    grid-column: 1;
+  }
+  .masthead-meta #todayLabel,
+  .masthead-meta .refresh-button {
+    grid-column: 2;
+    justify-self: end;
+  }
+  .section-register {
+    margin-bottom: 14px;
+    padding-bottom: 5px;
+    border-bottom-width: 2px;
+  }
+  .current-register { border-bottom-width: 3px; }
+  .section-number {
+    font-size: 3.9rem;
+  }
+  .temperature-reading > span:first-child {
+    font-size: clamp(6.8rem, 31vw, 9.8rem);
+  }
+  .primary-reading-foot {
+    margin-top: 12px;
+  }
+  .measurement-matrix {
+    gap: 20px;
+  }
+  .measurement-row,
+  .measurement-row:nth-child(1),
+  .measurement-row:nth-child(2),
+  .measurement-row:nth-child(3),
+  .measurement-row:nth-child(4),
+  .measurement-row:nth-child(5),
+  .measurement-row:nth-child(6) {
+    padding-top: 7px;
+  }
+  .measurement-row:nth-child(2) .measurement-value {
+    font-size: clamp(3.7rem, 17vw, 5.5rem);
+  }
+  .measurement-row:nth-child(1) .measurement-value,
+  .measurement-row:nth-child(4) .measurement-value,
+  .measurement-row:nth-child(6) .measurement-value {
+    font-size: clamp(2.7rem, 13vw, 4.2rem);
+  }
+  .measurement-row:nth-child(3) .measurement-value,
+  .measurement-row:nth-child(5) .measurement-value {
+    font-size: clamp(2.2rem, 10vw, 3.4rem);
+  }
+  .chart-toolbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 14px;
+  }
+  .chart-toolbar::-webkit-scrollbar { display: none; }
+  .series-options {
+    flex-wrap: nowrap;
+    min-width: max-content;
+    margin-left: 0;
+  }
+  .chart-card:nth-child(1) .chart-heading h3 {
+    font-size: clamp(3rem, 15vw, 4.6rem);
+  }
+  .chart-card:nth-child(1) .plot-navigation,
+  .chart-card:nth-child(2) .plot-navigation,
+  .chart-card:nth-child(3) .plot-navigation,
+  .chart-card:nth-child(4) .plot-navigation {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    align-items: center;
+  }
+  .period-strip {
+    grid-column: 1 / -1;
+    order: 2;
+    gap: 10px;
+  }
+  .plot-page-buttons {
+    justify-self: end;
+  }
+  .chart-card:nth-child(1) .chart { height: 300px; }
+  .chart-card:nth-child(2) .chart,
+  .chart-card:nth-child(3) .chart,
+  .chart-card:nth-child(4) .chart { height: 230px; }
+  .performance-grid {
+    gap: 22px;
+  }
+  .performance-metric {
+    min-height: 0;
+  }
+  .performance-metric:nth-child(4) .performance-value {
+    font-size: clamp(4rem, 20vw, 6.2rem);
+  }
+  .model-details {
+    margin-top: 32px;
+  }
+}

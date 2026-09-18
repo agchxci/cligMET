@@ -191,7 +191,7 @@
   }
 
   function drawEmpty(svg, width, height, label) {
-    const node = svgElement('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle', 'font-size': 14, fill: COLOURS.muted }, label);
+    const node = svgElement('text', { x: width / 2, y: height / 2, 'text-anchor': 'middle', 'font-size': 11, fill: COLOURS.muted, 'class': 'chart-empty-label' }, label);
     svg.append(node);
   }
 
@@ -206,7 +206,7 @@
       const xx = x(stamp);
       svg.append(svgElement('line', { x1: xx, x2: xx, y1: plot.top, y2: plot.bottom, stroke: COLOURS.gridMajor, 'stroke-width': .8 }));
       const anchor = xx < plot.left + 24 ? 'start' : xx > plot.right - 24 ? 'end' : 'middle';
-      const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 11 });
+      const label = svgElement('text', { x: xx, y: plot.bottom + 22, 'text-anchor': anchor, fill: COLOURS.muted, 'font-size': 10, 'class': 'chart-axis-label chart-axis-time' });
       const longWindow = domain.end - domain.start > 8 * 24 * HOUR;
       label.append(svgElement('tspan', { x: xx }, longWindow ? shortDate(stamp) : clockLabel(stamp)));
       if (!longWindow) label.append(svgElement('tspan', { x: xx, dy: 16 }, shortDate(stamp)));
@@ -289,7 +289,7 @@
       svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: COLOURS.gridMajor, 'stroke-width': .75 }));
       if (major) {
         const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
-        svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 11 }, format(value, digits)));
+        svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 10, 'class': 'chart-axis-label chart-axis-value' }, format(value, digits)));
       }
     }
     drawTimeTicks(svg, domain, plot, x);
