@@ -17,6 +17,17 @@
   <div class="site-shell">
     <header class="masthead">
       <a class="wordmark" href="#" aria-label="cligMET home">cligMET</a>
+
+      <div class="masthead-live" aria-label="Current temperature">
+        <div class="masthead-live-kicker" aria-hidden="true"><span>01</span><span>CLG/01.0</span></div>
+        <div class="temperature-reading masthead-temperature"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
+        <div class="masthead-live-foot">
+          <span class="reading-time" id="observationTime">—</span>
+          <span class="status-badge" id="dataBadge">CONNECTING</span>
+        </div>
+        <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+      </div>
+
       <div class="masthead-meta">
         <span class="eyebrow">Meteorological observations</span>
         <span class="station-name" id="stationName">Station —</span>
@@ -28,22 +39,9 @@
 
     <main>
       <section id="observations" class="observations" aria-labelledby="observationsTitle">
-        <div class="section-heading overview-heading">
-          <div>
-            <p class="eyebrow">Live station console</p>
-            <h1 id="observationsTitle">Now</h1>
-          </div>
-          <span class="status-badge" id="dataBadge">CONNECTING</span>
-        </div>
-        <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+        <h1 id="observationsTitle" class="visually-hidden">Current conditions</h1>
 
         <article class="current-panel" id="weatherOverview" aria-busy="true">
-          <div class="primary-reading">
-            <div class="register-label"><span>TEMP</span><span>DRY BULB</span></div>
-            <div class="temperature-reading"><span id="temperatureValue">—</span><span class="large-unit">°C</span></div>
-            <p class="reading-time" id="observationTime">—</p>
-          </div>
-
           <div class="measurement-matrix" aria-label="Current station measurements">
             <div class="measurement-row"><span class="measurement-code">RH</span><span class="measurement-name">Humidity</span><span class="measurement-value" id="humidityValue">—</span><span class="measurement-unit">%</span></div>
             <div class="measurement-row"><span class="measurement-code">PRES</span><span class="measurement-name">Pressure</span><span class="measurement-value" id="pressureValue">—</span><span class="measurement-unit">hPa</span></div>
@@ -56,9 +54,8 @@
       </section>
 
       <section id="weather" class="weather-section" aria-labelledby="weatherTitle">
-        <div class="section-heading">
-          <div><p class="eyebrow">Observations &amp; forecasts</p><h2 id="weatherTitle">Weather</h2></div>
-        </div>
+        <h2 id="weatherTitle" class="visually-hidden">Weather</h2>
+        <div class="section-register" aria-hidden="true"><span class="section-number">02</span><span class="section-ref">CLG/02.1</span></div>
         <div class="chart-toolbar">
           <fieldset class="series-options">
             <legend class="visually-hidden">Visible chart series</legend>
@@ -149,7 +146,9 @@
       </section>
 
       <section id="calibration" class="calibration-section" aria-labelledby="calibrationTitle">
-        <div class="section-heading"><div><p class="eyebrow">Model performance</p><h2 id="calibrationTitle">Calibration</h2></div><span class="mode-badge" id="calibrationMode">Waiting for data</span></div>
+        <h2 id="calibrationTitle" class="visually-hidden">Calibration</h2>
+        <div class="section-register calibration-register" aria-hidden="true"><span class="section-number">03</span><span class="section-ref">CLG/03.1</span></div>
+        <span class="mode-badge" id="calibrationMode">Waiting for data</span>
         <p class="section-intro" id="calibrationStatus">Loading verified forecast results…</p>
         <div class="performance-grid">
           <article class="performance-metric"><h3>Hours</h3><div class="performance-value" id="verifiedHours">—</div><p id="verifiedNote">Unique hours used for verification</p></article>
