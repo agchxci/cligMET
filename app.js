@@ -124,8 +124,8 @@
   function renderObservation() {
     const snapshot = state.snapshot;
     const station = String(snapshot.settings?.station_id || '—');
-    text('stationName', `Station ${station}`);
-    text('footerStation', `Station ${station}`);
+    text('stationName', station);
+    text('footerStation', station);
     const latitude = number(snapshot.settings?.latitude ?? snapshot.settings?.lat);
     const longitude = number(snapshot.settings?.longitude ?? snapshot.settings?.lon);
     const position = latitude !== null && longitude !== null ? ` · ${Math.abs(latitude).toFixed(2)}°${latitude >= 0 ? 'N' : 'S'} / ${Math.abs(longitude).toFixed(2)}°${longitude >= 0 ? 'E' : 'W'}` : '';
