@@ -326,7 +326,7 @@
     const timeline = [...new Set(series.flatMap(item => item.points.filter(point => point.value !== null).map(point => point.t)).concat(useBand ? forecast.filter(point => number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null).map(point => point.t) : []))].sort((a, b) => a - b);
     const data = { definition, domain, plot, width, x, y, series, forecast, useBand, timeline, guide, guideLine };
     state.charts.set(definition.id, data);
-    readout.textContent = `${domain.interval === 24 ? 'Daily means' : domain.interval === 3 ? '3-hour means' : 'Hourly readings'} · hover, tap or use arrow keys for values`;
+    readout.textContent = '';
     const selectedTime = state.selectedTimes.get(definition.id);
     if (selectedTime !== undefined && timeline.includes(selectedTime)) inspectChart(data, selectedTime, false);
     else state.selectedTimes.delete(definition.id);
