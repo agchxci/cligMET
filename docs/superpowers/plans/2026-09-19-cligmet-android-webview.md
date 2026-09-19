@@ -250,7 +250,7 @@ Create `app/src/main/AndroidManifest.xml`:
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:label="@string/app_name"
         android:theme="@style/Theme.Cligmet"
         android:usesCleartextTraffic="false">
@@ -282,16 +282,18 @@ git commit -m "feat: scaffold cligMET Android app and URL policy"
 **Files:**
 - Create: `app/src/main/java/xyz/cligmet/app/MainActivity.kt`
 - Create: `app/src/main/java/xyz/cligmet/app/CligmetWebViewClient.kt`
+- Create: `app/src/main/java/xyz/cligmet/app/BackNavigation.kt`
 - Create: `app/src/main/res/layout/activity_main.xml`
 - Create: `app/src/main/res/values/strings.xml`
 - Create: `app/src/main/res/values/styles.xml`
 - Create: `app/src/main/res/xml/network_security_config.xml`
 - Modify: `app/src/main/AndroidManifest.xml`
 - Create: `app/src/test/java/xyz/cligmet/app/MainActivityTest.kt`
+- Create: `app/src/test/java/xyz/cligmet/app/BackNavigationTest.kt`
 
 **Interfaces:**
 - Consumes: `UrlPolicy.classify(Uri)`.
-- Produces: `MainActivity.showError()`, `MainActivity.showWebContent()`, and `CligmetWebViewClient` callbacks used only by the Activity.
+- Produces: `MainActivity.showError()`, `MainActivity.showWebContent()`, `BackNavigation.decide(Boolean): BackAction`, and `CligmetWebViewClient` callbacks used only by the Activity.
 
 - [ ] **Step 1: Write failing Robolectric tests for WebView configuration, retry UI, and Back behavior**
 
@@ -493,7 +495,53 @@ class CligmetWebViewClient(
 }
 ```
 
-- [ ] **Step 5: Implement MainActivity with secure settings, retry and Back handling**
+- [ ] **Step 5: Write and implement the Back-navigation decision test**
+
+Create `app/src/test/java/xyz/cligmet/app/BackNavigationTest.kt` first:
+
+```kotlin
+package xyz.cligmet.app
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class BackNavigationTest {
+    @Test
+    fun historyUsesWebBack() {
+        assertEquals(BackAction.WEB_BACK, BackNavigation.decide(canGoBack = true))
+    }
+
+    @Test
+    fun noHistoryFinishesActivity() {
+        assertEquals(BackAction.FINISH, BackNavigation.decide(canGoBack = false))
+    }
+}
+```
+
+Run:
+
+```bash
+./gradlew testDebugUnitTest --tests xyz.cligmet.app.BackNavigationTest
+```
+
+Expected: FAIL because `BackNavigation` does not exist.
+
+Create `app/src/main/java/xyz/cligmet/app/BackNavigation.kt`:
+
+```kotlin
+package xyz.cligmet.app
+
+enum class BackAction { WEB_BACK, FINISH }
+
+object BackNavigation {
+    fun decide(canGoBack: Boolean): BackAction =
+        if (canGoBack) BackAction.WEB_BACK else BackAction.FINISH
+}
+```
+
+Re-run the test. Expected: PASS.
+
+- [ ] **Step 6: Implement MainActivity with secure settings, retry and Back handling**
 
 Create `app/src/main/java/xyz/cligmet/app/MainActivity.kt`:
 
@@ -564,16 +612,15 @@ class MainActivity : Activity() {
 
     @Deprecated("Platform callback retained for minSdk 26 compatibility")
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
+        when (BackNavigation.decide(webView.canGoBack())) {
+            BackAction.WEB_BACK -> webView.goBack()
+            BackAction.FINISH -> super.onBackPressed()
         }
     }
 }
 ```
 
-- [ ] **Step 6: Add cleartext network policy and app theme**
+- [ ] **Step 7: Add cleartext network policy and app theme**
 
 `app/src/main/res/xml/network_security_config.xml`:
 
@@ -604,7 +651,7 @@ Update `<application>` in the manifest to include:
 android:networkSecurityConfig="@xml/network_security_config"
 ```
 
-- [ ] **Step 7: Pin TLS-error behavior with a testable helper**
+- [ ] **Step 8: Pin TLS-error behavior with a testable helper**
 
 Add this internal helper to `CligmetWebViewClient`:
 
@@ -639,7 +686,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 8: Run Activity and full unit tests and verify GREEN**
+- [ ] **Step 9: Run Activity and full unit tests and verify GREEN**
 
 Run:
 
@@ -649,7 +696,7 @@ Run:
 
 Expected: all unit/Robolectric tests PASS.
 
-- [ ] **Step 9: Add deterministic WebView-client navigation tests**
+- [ ] **Step 10: Add deterministic WebView-client navigation tests**
 
 Add `app/src/test/java/xyz/cligmet/app/CligmetWebViewClientTest.kt`. The test uses Robolectric's `WebView` plus a small test implementation of `WebResourceRequest` whose `url` is supplied explicitly. For each request, call `shouldOverrideUrlLoading` and assert the return value:
 
@@ -695,7 +742,34 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Add recreation regression test**
+
+Add to `MainActivityTest.kt`:
+
+```kotlin
+@Test
+fun activityRecreationKeepsSingleUsableWebView() {
+    val controller = Robolectric.buildActivity(MainActivity::class.java).setup()
+    controller.recreate()
+    val activity = controller.get()
+
+    val webViews = activity.findViewById<android.view.ViewGroup>(R.id.root)
+        .let { root -> (0 until root.childCount).map { root.getChildAt(it) }.filterIsInstance<WebView>() }
+
+    assertEquals(1, webViews.size)
+    assertEquals(android.view.View.VISIBLE, webViews.single().visibility)
+}
+```
+
+Run:
+
+```bash
+./gradlew testDebugUnitTest --tests xyz.cligmet.app.MainActivityTest.activityRecreationKeepsSingleUsableWebView
+```
+
+Expected: PASS.
+
+- [ ] **Step 12: Commit**
 
 ```bash
 git add app
@@ -731,9 +805,30 @@ git commit -m "feat: add secure cligMET WebView shell"
 </resources>
 ```
 
-Create `app/src/main/res/drawable/ic_cligmet.xml` as a simple black-on-white vector mark using the cligMET wordmark/initial treatment, with no external bitmap dependency.
+Create `app/src/main/res/drawable/ic_cligmet.xml`:
 
-Create adaptive launcher icon XML files referencing that foreground and a white background.
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#111111"
+        android:pathData="M84,24 C72,14 56,10 42,14 C24,20 14,36 14,54 C14,72 24,88 42,94 C56,98 72,94 84,84 L74,72 C66,79 57,82 48,80 C36,77 29,67 29,54 C29,41 36,31 48,28 C57,26 66,29 74,36 Z" />
+</vector>
+```
+
+Create `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` with identical contents:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/cligmet_white" />
+    <foreground android:drawable="@drawable/ic_cligmet" />
+</adaptive-icon>
+```
 
 - [ ] **Step 2: Add Android 12+ native splash**
 
