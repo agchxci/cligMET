@@ -8,13 +8,11 @@ window.CligmetMultiStation = (() => {
   }
 
   function currentRows(snapshots, selection) {
-    return selectedIds(selection)
-      .map(stationId => {
-        const snapshot = snapshots.get(stationId);
-        const observation = snapshot?.current?.available ? snapshot.current.observation || null : null;
-        return snapshot ? { stationId, snapshot, observation } : null;
-      })
-      .filter(Boolean);
+    return selectedIds(selection).map(stationId => {
+      const snapshot = snapshots.get(stationId) || null;
+      const observation = snapshot?.current?.available ? snapshot.current.observation || null : null;
+      return { stationId, snapshot, observation };
+    });
   }
 
   function seriesSources(snapshots, histories, selection, preferences) {
