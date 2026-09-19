@@ -508,6 +508,7 @@
     const svg = card.querySelector('.chart');
     const closeButton = card.querySelector('.chart-fullscreen-close');
     card.classList.remove('is-fullscreen');
+    if (svg) svg.setAttribute('aria-expanded', 'false');
     card.removeAttribute('role');
     card.removeAttribute('aria-modal');
     card.removeAttribute('aria-labelledby');
@@ -524,6 +525,7 @@
     if (!card || card.classList.contains('is-fullscreen')) return;
     closeFullscreenChart({ restoreFocus: false });
     card.classList.add('is-fullscreen');
+    svg.setAttribute('aria-expanded', 'true');
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-modal', 'true');
     card.setAttribute('aria-labelledby', `${definition.id}Title`);
@@ -540,6 +542,8 @@
   function bindChartInteraction(definition) {
     const svg = $(definition.id);
     const card = svg.closest('.chart-card');
+    svg.setAttribute('aria-haspopup', 'dialog');
+    svg.setAttribute('aria-expanded', 'false');
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.className = 'chart-fullscreen-close';
@@ -570,6 +574,11 @@
     svg.addEventListener('pointermove', inspectPointer);
     svg.addEventListener('pointerdown', inspectPointer);
     svg.addEventListener('keydown', event => {
+      if (!card.classList.contains('is-fullscreen') && ['Enter', ' '].includes(event.key)) {
+        event.preventDefault();
+        openFullscreenChart(definition);
+        return;
+      }
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Escape'].includes(event.key)) return;
       const data = state.charts.get(definition.id);
       if (!data?.timeline.length) return;
@@ -613,10 +622,26 @@
   }
   window.addEventListener('resize', resize);
   document.addEventListener('keydown', event => {
-    if (event.key !== 'Escape' || !fullscreenChartCard()) return;
-    event.preventDefault();
-    event.stopPropagation();
-    closeFullscreenChart();
+    const card = fullscreenChartCard();
+    if (!card) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFullscreenChart();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = [...card.querySelectorAll('button:not([hidden]):not([disabled]), .chart[tabindex="0"]')]
+      .filter(element => element.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }, true);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && Date.now() - state.lastAttempt > 60000) loadSnapshot();
