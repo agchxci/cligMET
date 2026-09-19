@@ -347,7 +347,7 @@ class MainActivityTest {
         activity.findViewById<Button>(R.id.retryButton).performClick()
 
         val webView = activity.findViewById<WebView>(R.id.webView)
-        assertEquals(MainActivity.START_URL, webView.url)
+        assertEquals(MainActivity.START_URL, org.robolectric.Shadows.shadowOf(webView).lastLoadedUrl)
     }
 }
 ```
@@ -604,7 +604,42 @@ Update `<application>` in the manifest to include:
 android:networkSecurityConfig="@xml/network_security_config"
 ```
 
-- [ ] **Step 7: Run Activity and full unit tests and verify GREEN**
+- [ ] **Step 7: Pin TLS-error behavior with a testable helper**
+
+Add this internal helper to `CligmetWebViewClient`:
+
+```kotlin
+internal fun cancelSslError(cancel: () -> Unit) {
+    cancel()
+}
+```
+
+Change `onReceivedSslError` to call `cancelSslError(handler::cancel)` before `activity.showError()`.
+
+Add to `CligmetWebViewClientTest.kt`:
+
+```kotlin
+@Test
+fun sslErrorsAreAlwaysCancelled() {
+    var cancelled = false
+    val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+    val client = CligmetWebViewClient(activity)
+
+    client.cancelSslError { cancelled = true }
+
+    assertTrue(cancelled)
+}
+```
+
+Run:
+
+```bash
+./gradlew testDebugUnitTest --tests xyz.cligmet.app.CligmetWebViewClientTest.sslErrorsAreAlwaysCancelled
+```
+
+Expected: PASS.
+
+- [ ] **Step 8: Run Activity and full unit tests and verify GREEN**
 
 Run:
 
@@ -614,19 +649,43 @@ Run:
 
 Expected: all unit/Robolectric tests PASS.
 
-- [ ] **Step 8: Add explicit navigation-client tests for external/deceptive/blocked URIs**
+- [ ] **Step 9: Add deterministic WebView-client navigation tests**
 
-Extend `MainActivityTest.kt` with a client-level test using a fake `WebResourceRequest` or, if Robolectric makes that unnecessarily brittle, extract the decision-to-action mapping into a pure helper `NavigationAction.from(Uri)` and test the three outcomes directly.
+Add `app/src/test/java/xyz/cligmet/app/CligmetWebViewClientTest.kt`. The test uses Robolectric's `WebView` plus a small test implementation of `WebResourceRequest` whose `url` is supplied explicitly. For each request, call `shouldOverrideUrlLoading` and assert the return value:
 
-The test must cover:
+```kotlin
+@Test
+fun internalHttpsStaysInWebView() {
+    val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+    val webView = activity.findViewById<WebView>(R.id.webView)
+    val client = CligmetWebViewClient(activity)
 
-```text
-https://cligmet.xyz/...            -> remains in WebView
-https://cligmet.xyz.evil.example  -> leaves WebView
-https://example.com/...            -> leaves WebView
-http://cligmet.xyz/...             -> blocked
-javascript:...                     -> blocked
+    val handled = client.shouldOverrideUrlLoading(
+        webView,
+        TestWebResourceRequest(Uri.parse("https://cligmet.xyz/forecast"))
+    )
+
+    assertFalse(handled)
+}
+
+@Test
+fun blockedCleartextIsConsumed() {
+    val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+    val webView = activity.findViewById<WebView>(R.id.webView)
+    val client = CligmetWebViewClient(activity)
+
+    val handled = client.shouldOverrideUrlLoading(
+        webView,
+        TestWebResourceRequest(Uri.parse("http://cligmet.xyz/"))
+    )
+
+    assertTrue(handled)
+}
 ```
+
+`TestWebResourceRequest` must implement all `WebResourceRequest` getters with stable test values: `isForMainFrame = true`, `isRedirect = false`, `hasGesture = true`, method `GET`, and empty request headers.
+
+Also add a test proving `https://cligmet.xyz.evil.example/` returns `true` (the request is consumed for external dispatch rather than allowed into the WebView).
 
 Run:
 
@@ -636,7 +695,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add app
@@ -678,17 +737,13 @@ Create adaptive launcher icon XML files referencing that foreground and a white 
 
 - [ ] **Step 2: Add Android 12+ native splash**
 
-Create `app/src/main/res/values-v31/styles.xml`:
+Create `app/src/main/res/values-v31/styles.xml` using only platform splash attributes:
 
 ```xml
 <resources>
     <style name="Theme.Cligmet" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowSplashScreenBackground">@color/cligmet_white</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_cligmet</item>
-        <item name="android:postSplashScreenTheme">@style/Theme.Cligmet.Content</item>
-    </style>
-
-    <style name="Theme.Cligmet.Content" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/cligmet_white</item>
         <item name="android:statusBarColor">@color/cligmet_white</item>
@@ -696,7 +751,7 @@ Create `app/src/main/res/values-v31/styles.xml`:
 </resources>
 ```
 
-Refactor base `values/styles.xml` so `Theme.Cligmet` remains a valid pre-API-31 launch theme with white `android:windowBackground`.
+Do not use `postSplashScreenTheme`; Version 1 deliberately has no AndroidX splash dependency. Refactor base `values/styles.xml` so `Theme.Cligmet` remains a valid pre-API-31 launch theme with white `android:windowBackground`.
 
 Update the manifest application icon fields:
 
