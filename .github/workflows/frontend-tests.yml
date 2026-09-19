@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/site-source
-          cp app.js history-navigation.js index.html styles.css config.js /tmp/site-source/
+          cp app.js history-navigation.js station-selection.js multi-station-data.js index.html styles.css config.js /tmp/site-source/
           cp -r tests /tmp/site-source/tests
           if [[ -f station-selection.js ]]; then cp station-selection.js /tmp/site-source/; fi
       - uses: actions/upload-artifact@v4
