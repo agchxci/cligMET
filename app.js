@@ -337,6 +337,30 @@
     else state.selectedTimes.delete(definition.id);
   }
 
+  function positionFullscreenReadout(data, selectedTime) {
+    const { definition, x, width } = data;
+    const svg = $(definition.id);
+    const card = svg.closest('.chart-card');
+    const readout = $(definition.readout);
+    if (!card?.classList.contains('is-fullscreen')) {
+      readout.classList.remove('overlay-left', 'overlay-right');
+      readout.style.removeProperty('--overlay-top');
+      readout.style.removeProperty('--overlay-left-edge');
+      readout.style.removeProperty('--overlay-right-edge');
+      return;
+    }
+
+    const svgRect = svg.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const crosshairRatio = Math.max(0, Math.min(1, x(selectedTime) / width));
+    const placeLeft = crosshairRatio > .52;
+    readout.classList.toggle('overlay-left', placeLeft);
+    readout.classList.toggle('overlay-right', !placeLeft);
+    readout.style.setProperty('--overlay-top', `${Math.max(12, svgRect.top - cardRect.top + 18)}px`);
+    readout.style.setProperty('--overlay-left-edge', `${Math.max(14, svgRect.left - cardRect.left + 18)}px`);
+    readout.style.setProperty('--overlay-right-edge', `${Math.max(14, cardRect.right - svgRect.right + 18)}px`);
+  }
+
   function inspectChart(data, selectedTime, announce) {
     const { definition, series, forecast, useBand, guide, guideLine, x, y } = data;
     state.selectedTimes.set(definition.id, selectedTime);
@@ -384,6 +408,7 @@
       }
     }
     readout.append(heading, values);
+    positionFullscreenReadout(data, selectedTime);
     if (announce) text('chartAnnouncement', `${definition.name}, ${heading.textContent}. ${parts.join('. ')}`);
   }
 
@@ -516,6 +541,7 @@
     const svg = card.querySelector('.chart');
     const closeButton = card.querySelector('.chart-fullscreen-close');
     card.classList.remove('is-fullscreen');
+    card.querySelector('.chart-readout')?.classList.remove('overlay-left', 'overlay-right');
     if (svg) svg.setAttribute('aria-expanded', 'false');
     card.removeAttribute('role');
     card.removeAttribute('aria-modal');
