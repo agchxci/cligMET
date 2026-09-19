@@ -645,6 +645,10 @@
     renderCharts();
   }
 
+  function validSnapshot(snapshot) {
+    return snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) && snapshot.settings && snapshot.current && snapshot.history && snapshot.forecast;
+  }
+
   async function loadSnapshot() {
     if (state.loading) return;
     state.loading = true;
@@ -660,11 +664,45 @@
       if (!configuredURL || configuredURL.includes('YOUR-CLIGMET')) throw new Error('configuration');
       const url = new URL(configuredURL, window.location.href);
       if (!['https:', 'http:'].includes(url.protocol)) throw new Error('configuration');
-      const response = await fetch(url, { method: 'GET', cache: 'no-store', credentials: 'omit', signal: controller.signal });
-      if (!response.ok) throw new Error('service');
-      const snapshot = await response.json();
-      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot) || !snapshot.settings || !snapshot.current || !snapshot.history || !snapshot.forecast) throw new Error('invalid-data');
-      state.snapshot = snapshot;
+
+      let discovery;
+      try {
+        const response = await fetch(window.CligmetStations.stationsUrl(configuredURL), { method: 'GET', cache: 'no-store', credentials: 'omit', signal: controller.signal });
+        if (!response.ok) throw new Error('station-discovery');
+        discovery = await response.json();
+        if (!discovery || !Array.isArray(discovery.stations)) throw new Error('station-discovery');
+      } catch (error) {
+        if (error.name === 'AbortError') throw error;
+        discovery = null;
+      }
+
+      if (discovery) {
+        const wanted = selectedStationIds();
+        const results = await Promise.allSettled(wanted.map(async stationId => {
+          const response = await fetch(window.CligmetStations.snapshotUrl(configuredURL, stationId), { method: 'GET', cache: 'no-store', credentials: 'omit', signal: controller.signal });
+          if (!response.ok) throw new Error('service');
+          const snapshot = await response.json();
+          if (!validSnapshot(snapshot) || String(snapshot.settings.station_id || '').toUpperCase() !== stationId) throw new Error('invalid-data');
+          return [stationId, snapshot];
+        }));
+        const snapshots = window.CligmetStations.fulfilledSnapshots(results);
+        if (!snapshots.size) throw new Error('service');
+        state.stations = discovery;
+        state.snapshots = snapshots;
+        state.snapshot = firstSelectedSnapshot();
+        state.compatibilityMode = false;
+      } else {
+        const response = await fetch(url, { method: 'GET', cache: 'no-store', credentials: 'omit', signal: controller.signal });
+        if (!response.ok) throw new Error('service');
+        const snapshot = await response.json();
+        if (!validSnapshot(snapshot)) throw new Error('invalid-data');
+        const station = String(snapshot.settings?.station_id || 'ILONDO1066').toUpperCase();
+        state.compatibilityMode = true;
+        state.stationSelection = window.CligmetStations.normaliseSelection(station);
+        state.snapshots = new Map([[station, snapshot]]);
+        state.snapshot = snapshot;
+      }
+
       state.error = null;
       historyNavigation.refreshed();
       renderObservation();
@@ -673,7 +711,7 @@
     } catch (error) {
       state.error = error.message === 'configuration' ? 'The public weather feed has not been configured.' : 'The weather feed is unavailable. Use Refresh to try again.';
       updateStatus();
-      if (!state.snapshot) {
+      if (!state.snapshots.size) {
         chartDefinitions.forEach(definition => {
           const svg = $(definition.id);
           svg.replaceChildren();
@@ -691,6 +729,7 @@
       $('refreshButton').setAttribute('aria-busy', 'false');
       $('weatherOverview').setAttribute('aria-busy', 'false');
       text('refreshLabel', 'Refresh');
+      renderStationSelector();
     }
   }
 
@@ -823,6 +862,18 @@
   text('todayLabel', shortDate(Date.now()));
   ['showMeasured', 'showForecast', 'showArchived', 'showRange'].forEach(id => $(id).addEventListener('change', savePreferences));
   ['temperature', 'pressure', 'humidity', 'solar', 'coefficient'].forEach(id => historyNavigation.bind(id));
+  document.querySelectorAll('[data-station-selection]').forEach(button => button.addEventListener('click', () => {
+    const next = window.CligmetStations.normaliseSelection(button.dataset.stationSelection);
+    if (next === state.stationSelection && state.snapshots.size) return;
+    state.stationSelection = next;
+    state.compatibilityMode = false;
+    state.snapshots = new Map();
+    state.snapshot = null;
+    state.selectedTimes.clear();
+    try { localStorage.setItem('cligmet.station.v1', next); } catch { /* Optional device preference. */ }
+    renderStationSelector();
+    loadSnapshot();
+  }));
   $('refreshButton').addEventListener('click', loadSnapshot);
   $('coefficientSelect').addEventListener('change', renderCoefficientHistory);
   $('modelDetails').addEventListener('toggle', renderCoefficientHistory);
