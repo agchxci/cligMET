@@ -9,6 +9,10 @@ on:
       - "android/**"
       - ".github/workflows/android-apk.yml"
 
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
