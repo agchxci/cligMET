@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.Cligmet" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/cligmet_white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_cligmet</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/cligmet_white</item>
+        <item name="android:statusBarColor">@color/cligmet_white</item>
+    </style>
+</resources>
