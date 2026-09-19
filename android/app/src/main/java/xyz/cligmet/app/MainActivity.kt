@@ -1,14 +1,15 @@
 package xyz.cligmet.app
 
 import android.annotation.SuppressLint
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Button
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
     companion object {
         const val START_URL = "https://cligmet.xyz"
     }
@@ -24,6 +25,7 @@ class MainActivity : Activity() {
         errorPanel = findViewById(R.id.errorPanel)
 
         configureWebView()
+        configureBackNavigation()
 
         findViewById<Button>(R.id.retryButton).setOnClickListener {
             showWebContent()
@@ -63,11 +65,17 @@ class MainActivity : Activity() {
         super.onSaveInstanceState(outState)
     }
 
-    @Deprecated("Platform callback retained for minSdk 26 compatibility")
-    override fun onBackPressed() {
-        when (BackNavigation.decide(webView.canGoBack())) {
-            BackAction.WEB_BACK -> webView.goBack()
-            BackAction.FINISH -> super.onBackPressed()
-        }
+    private fun configureBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when (BackNavigation.decide(webView.canGoBack())) {
+                    BackAction.WEB_BACK -> webView.goBack()
+                    BackAction.FINISH -> {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            }
+        })
     }
 }
