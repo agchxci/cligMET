@@ -9,6 +9,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <script src="config.js" defer></script>
+  <script src="station-selection.js" defer></script>
+  <script src="multi-station-data.js" defer></script>
   <script src="history-navigation.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -20,6 +22,11 @@
       <div class="masthead-meta">
         <span class="eyebrow">Meteorological observations</span>
         <span class="station-name" id="stationName">Station —</span>
+        <div class="station-selector" id="stationSelector" role="group" aria-label="Weather station">
+          <button type="button" data-station-selection="both" aria-pressed="true">BOTH</button>
+          <button type="button" data-station-selection="ILONDO1066" aria-pressed="false">ILONDO1066</button>
+          <button type="button" data-station-selection="ILONDO327" aria-pressed="false">ILONDO327</button>
+        </div>
         <span class="muted" id="todayLabel">—</span>
         <span class="technical-meta" id="stationMeta">STN — · TZ — · UPDATE 60S</span>
         <button class="button refresh-button" id="refreshButton" type="button"><span id="refreshLabel">Refresh</span></button>
@@ -49,6 +56,7 @@
             <div class="measurement-row"><span class="measurement-code">SOL</span><span class="measurement-name">Solar</span><span class="measurement-value" id="solarValue">—</span><span class="measurement-unit">W/m²</span></div>
           </div>
         </article>
+        <div class="dual-current-grid" id="dualWeatherOverview" aria-live="polite" hidden></div>
       </section>
 
       <section id="weather" class="weather-section" aria-labelledby="weatherTitle">
@@ -148,7 +156,8 @@
         <div class="section-register calibration-register" aria-hidden="true"><span class="section-number">03</span><span class="section-ref">CLG/03.1</span></div>
         <span class="mode-badge" id="calibrationMode">Waiting for data</span>
         <p class="section-intro" id="calibrationStatus">Loading verified forecast results…</p>
-        <div class="performance-grid">
+        <div class="dual-calibration-grid" id="dualCalibrationSummary" hidden></div>
+        <div class="performance-grid" id="calibrationPerformance">
           <article class="performance-metric"><h3>Hours</h3><div class="performance-value" id="verifiedHours">—</div><p id="verifiedNote">Unique hours used for verification</p></article>
           <article class="performance-metric"><h3>cligMET MAE</h3><div class="performance-value"><span id="cligmetMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
           <article class="performance-metric"><h3>Open-Meteo MAE</h3><div class="performance-value"><span id="modelMae">—</span><span class="unit">°C</span></div><p>Mean absolute error · lower is better</p></article>
