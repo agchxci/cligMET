@@ -367,7 +367,8 @@ git commit -m "feat: support independent station snapshots"
   - `Database.settings(station_id=PRIMARY_STATION_ID, reveal_key=False)`
   - `Database.controls(station_id)`
   - `Database.station_status(station_id)`
-  - `Database.set_station_status(station_id, key, value)`.
+  - `Database.set_station_status(station_id, key, value)`
+  - `Database.update_settings(station_id, payload)`.
 
 - [ ] **Step 1: Create a migration snapshot test before changing schema**
 
@@ -625,7 +626,74 @@ def station_status(self, station_id: str) -> dict[str, Any]:
 
 Keep `app_status` only for display/global values.
 
-- [ ] **Step 6: Refactor coefficient/calibration methods to require station**
+- [ ] **Step 6: Split global key/display settings from per-station forecast settings**
+
+Replace the old station-switching `update_settings(payload)` behavior with a station-targeted update. The singleton `settings.station_id` remains the immutable primary/default `ILONDO1066`; posting settings for ILONDO327 must never change it.
+
+Implement:
+
+```python
+def update_settings(self, station_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    station = normalise_station_id(station_id)
+    current = self.settings(station, reveal_key=True)
+
+    requested_station = payload.get("station_id")
+    if requested_station is not None and normalise_station_id(str(requested_station)) != station:
+        raise ValueError("station_id does not match the selected station")
+
+    api_key = payload.get("api_key", current["api_key"])
+    if api_key == "configured":
+        api_key = current["api_key"]
+
+    controls_data = {
+        **current["controls"],
+        **(payload.get("forecast") or payload.get("controls") or {}),
+    }
+    controls = Controls(**{key: float(value) for key, value in controls_data.items()}).normalised()
+
+    calibration = {**current["calibration"], **(payload.get("calibration") or {})}
+    mode = str(calibration.get("mode", "auto")).lower()
+    if mode not in {"auto", "manual"}:
+        mode = "auto"
+    days = int(clamp(int(calibration.get("calibration_days", 30)), 7, 90))
+    minimum = int(clamp(int(calibration.get("minimum_verified_hours", 168)), 24, 1440))
+    now = iso_now()
+
+    with self.lock, self.connect() as con:
+        con.execute(
+            "UPDATE settings SET api_key=?, units='m', updated_at=? WHERE id=1",
+            (str(api_key or "").strip(), now),
+        )
+        con.execute(
+            """UPDATE station_settings
+               SET temperature_offset=?, station_bias_influence=?, pressure_trend_influence=?,
+                   temperature_responsiveness=?, local_rain_influence=?, calibration_mode=?,
+                   calibration_paused=?, calibration_days=?, minimum_verified_hours=?, updated_at=?
+               WHERE station_id=?""",
+            (
+                controls.temperature_offset,
+                controls.station_bias_influence,
+                controls.pressure_trend_influence,
+                controls.temperature_responsiveness,
+                controls.local_rain_influence,
+                mode,
+                1 if calibration.get("paused") else 0,
+                days,
+                minimum,
+                now,
+                station,
+            ),
+        )
+
+    if payload.get("display") is not None:
+        self.save_display_options(payload["display"])
+    self.append_coefficient_snapshot(station, "manual", "Settings changed from the web dashboard")
+    return self.settings(station)
+```
+
+Add a test proving `db.update_settings("ILONDO327", ...)` changes only ILONDO327 controls and leaves `settings.id=1.station_id` equal to `ILONDO1066`.
+
+- [ ] **Step 7: Refactor coefficient/calibration methods to require station**
 
 Update signatures and SQL filters:
 
@@ -642,7 +710,7 @@ All coefficient queries include `WHERE station_id=?`.
 
 All settings updates target `station_settings WHERE station_id=?`.
 
-- [ ] **Step 7: Run migration tests**
+- [ ] **Step 8: Run migration tests**
 
 Run:
 
@@ -652,7 +720,7 @@ python -m pytest -q home/test_cligmet.py home/test_multistation.py
 
 Expected: PASS.
 
-- [ ] **Step 8: Create a pre-deploy DB backup helper**
+- [ ] **Step 9: Create a pre-deploy DB backup helper**
 
 Add a small command or documented Python invocation using SQLite backup API:
 
@@ -670,7 +738,7 @@ PY
 
 Document that the live migration is not run until this file exists.
 
-- [ ] **Step 9: Commit the home DB migration**
+- [ ] **Step 10: Commit the home DB migration**
 
 Commit/package the source changes as:
 
@@ -822,24 +890,89 @@ The test must fail if `generate_and_store_forecast("ILONDO327")` accidentally re
 
 - [ ] **Step 5: Refactor forecast generation**
 
-Change all helpers that currently reach into `db.settings()`, `db.controls()`, `db.latest_observation()`, `db.coordinates()` or `db.observation_rows()` to accept/pass the same `station_id`.
-
-At forecast storage:
+Implement the station argument at the orchestration boundary:
 
 ```python
-db.store_forecast(
-    station_id=station,
-    issued_epoch=issued_epoch,
-    method="cligmet-v3.2",
-    controls=controls,
-    issue_temperature=current["temperature"],
-    raw_station_bias=raw_station_bias,
-    recent_temperature_slope=recent_temperature_slope,
-    model_latitude=latitude,
-    model_longitude=longitude,
-    points=forecast_points,
-)
+async def generate_and_store_forecast(station_id: str) -> dict[str, Any]:
+    station = normalise_station_id(station_id)
+    series = hourly_series(db.observation_rows(station, 45 * 24))
+    if len(series) < 12:
+        return {
+            "available": False,
+            "reason": "At least 12 hourly observations are required.",
+            "points": [],
+        }
+
+    controls = db.controls(station)
+    latitude, longitude = db.coordinates(station)
+    result = None
+    try:
+        model = await fetch_model(latitude, longitude)
+        result = model_guided_forecast(series, model, FORECAST_HOURS, controls)
+        db.set_station_status(station, "last_model_error", "")
+    except Exception as exc:
+        db.set_station_status(station, "last_model_error", str(exc))
+
+    if result is None:
+        result = ridge_fallback_forecast(series, FORECAST_HOURS, controls)
+
+    db.save_forecast(station, result, latitude, longitude)
+    db.set_station_status(station, "last_forecast", iso_now())
+    return result
 ```
+
+Any helper that still reaches into `db.settings()`, `db.controls()`, `db.latest_observation()`, `db.coordinates()` or `db.observation_rows()` must instead receive/pass the same explicit `station_id`.
+
+Refactor the existing database writer from `save_forecast(result, latitude, longitude)` to:
+
+```python
+def save_forecast(
+    self,
+    station_id: str,
+    result: dict[str, Any],
+    latitude: float,
+    longitude: float,
+) -> int | None:
+    if not result.get("available") or not result.get("points"):
+        return None
+    station = normalise_station_id(station_id)
+    issued_epoch = int(result["issued_epoch"]) // 3600 * 3600
+    controls = result.get("controls") or asdict(self.controls(station))
+
+    with self.lock, self.connect() as con:
+        con.execute(
+            "DELETE FROM forecast_runs WHERE station_id=? AND issued_epoch=?",
+            (station, issued_epoch),
+        )
+        cursor = con.execute(
+            """INSERT INTO forecast_runs
+               (station_id,issued_epoch,issued_at,method,controls_json,issue_temperature,
+                raw_station_bias,recent_temperature_slope,model_latitude,model_longitude,created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                station,
+                issued_epoch,
+                iso_from_epoch(issued_epoch),
+                result["method"],
+                json.dumps(controls),
+                result.get("issue_temperature", 0),
+                result.get("raw_station_temperature_bias", 0),
+                result.get("recent_temperature_slope", 0),
+                latitude,
+                longitude,
+                iso_now(),
+            ),
+        )
+        run_id = cursor.lastrowid
+        # Keep the existing forecast_points INSERT loop unchanged.
+        for point in result["points"]:
+            insert_forecast_point(con, run_id, point)
+        cutoff = int(time.time()) - FORECAST_RETENTION_DAYS * 86400
+        con.execute("DELETE FROM forecast_runs WHERE issued_epoch < ?", (cutoff,))
+    return int(run_id)
+```
+
+To avoid duplicating the existing 19-column point insert, extract its current SQL/body verbatim to `insert_forecast_point(con, run_id, point)`. The extracted helper must not change any forecast-point field mapping.
 
 - [ ] **Step 6: Write calibration-isolation tests**
 
@@ -865,25 +998,58 @@ def auto_calibrate(station_id: str, force: bool = False) -> tuple[bool, str]:
     station = normalise_station_id(station_id)
     settings = db.settings(station, reveal_key=True)
     calibration = settings["calibration"]
-    metrics = db.calibration_metrics(station)
 
     if calibration["mode"] != "auto":
-        return False, "Manual calibration selected."
+        return False, "Automatic calibration is not selected."
     if calibration["paused"]:
-        return False, "Automatic calibration paused."
-    if not force and metrics["verified_hours"] < calibration["minimum_verified_hours"]:
-        return False, "Collecting verified forecast hours."
+        return False, "Automatic calibration is paused."
 
+    metrics = db.calibration_metrics(station)
+    if metrics["verified_hours"] < calibration["minimum_verified_hours"]:
+        return False, "Collecting verified forecasts before the first automatic adjustment."
+
+    if not force and calibration["last_run"]:
+        try:
+            last = datetime.fromisoformat(
+                calibration["last_run"].replace("Z", "+00:00")
+            ).timestamp()
+            if time.time() - last < 86400:
+                return False, "Automatic calibration has already run within the last 24 hours."
+        except ValueError:
+            pass
+
+    records = db.calibration_records(station)
     current = db.controls(station)
-    candidate, reason = calibrated_candidate(current, metrics)
-    if candidate == current:
-        return False, "No coefficient change required."
+    optimum = optimise_controls(records, current)
+    candidate = Controls(
+        move_toward(current.temperature_offset, optimum.temperature_offset, .10),
+        move_toward(current.station_bias_influence, optimum.station_bias_influence, .03),
+        move_toward(current.pressure_trend_influence, optimum.pressure_trend_influence, .03),
+        move_toward(current.temperature_responsiveness, optimum.temperature_responsiveness, .05),
+        move_toward(current.local_rain_influence, optimum.local_rain_influence, .03),
+    ).normalised()
 
-    db.save_controls(station, candidate, "auto", reason, update_last_run=True)
-    return True, reason
+    improved = (
+        temperature_mae(records, optimum) < temperature_mae(records, current) - .002
+        or pressure_mae(records, optimum.pressure_trend_influence)
+           < pressure_mae(records, current.pressure_trend_influence) - .002
+        or rain_brier(records, optimum.local_rain_influence)
+           < rain_brier(records, current.local_rain_influence) - .0001
+    )
+
+    db.set_calibration(station, last_calibration_run=iso_now())
+    if improved and candidate != current:
+        db.save_controls(
+            station,
+            candidate,
+            "auto",
+            "Small guarded adjustment based on the rolling verification window",
+        )
+        return True, "Coefficients were adjusted within the daily safety limits."
+    return False, "The current coefficients remain the best verified set."
 ```
 
-If the existing calibration function computes the candidate inline rather than through `calibrated_candidate`, extract that existing calculation unchanged into `calibrated_candidate(current, metrics) -> tuple[Controls, str]`; do not alter its mathematics in this feature.
+This is the existing calibration mathematics with only station scoping added.
 
 All `verify_forecasts`, coefficient-history and calibration methods receive the same station.
 
@@ -927,7 +1093,7 @@ async def sync_station(station_id: str, include_history: bool = False) -> dict[s
 
 
 async def sync_once(include_history: bool = False) -> dict[str, Any]:
-    async with sync_lock:
+    async with _sync_lock:
         results = {}
         for station in STATION_IDS:
             results[station] = await sync_station(station, include_history)
