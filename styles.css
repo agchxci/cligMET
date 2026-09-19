@@ -2669,7 +2669,8 @@ body.chart-fullscreen-open {
   margin-top: 4px;
   background: #fff;
   cursor: crosshair;
-  touch-action: manipulation;
+  touch-action: none;
+  user-select: none;
 }
 
 .chart-card.is-fullscreen .chart-readout {
@@ -2700,5 +2701,44 @@ body.chart-fullscreen-open {
 
   .chart-card.is-fullscreen .chart {
     min-height: 180px;
+  }
+}
+
+
+/* Full-screen trace crosshair. */
+.chart-card.is-fullscreen .chart-crosshair-line {
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-card.is-fullscreen .chart-crosshair-point {
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-card.is-fullscreen .chart-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 42px;
+  font-size: .72rem;
+}
+
+.chart-card.is-fullscreen .readout-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.chart-card.is-fullscreen .readout-time {
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .chart-card.is-fullscreen .chart-readout {
+    align-items: flex-start;
+    gap: 6px;
+    font-size: .66rem;
   }
 }
