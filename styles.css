@@ -2596,3 +2596,109 @@ body { background: var(--page); }
     margin-top: 32px;
   }
 }
+
+
+/* Full-screen chart focus mode. */
+body.chart-fullscreen-open {
+  overflow: hidden;
+}
+
+.chart-card .chart {
+  cursor: zoom-in;
+}
+
+.chart-fullscreen-close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: 3;
+  display: block;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 9vw, 9rem);
+  font-weight: 300;
+  line-height: .65;
+  letter-spacing: -.08em;
+  cursor: pointer;
+}
+
+.chart-fullscreen-close[hidden] {
+  display: none;
+}
+
+.chart-card.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000;
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: clamp(16px, 2vw, 28px) clamp(18px, 2.5vw, 36px) clamp(14px, 2vw, 24px) !important;
+  overflow: hidden;
+  background: var(--page);
+  transform: none !important;
+}
+
+.chart-card.is-fullscreen .chart-heading {
+  flex: 0 0 auto;
+  padding-right: clamp(84px, 10vw, 150px);
+}
+
+.chart-card.is-fullscreen .plot-navigation,
+.chart-card.is-fullscreen .plot-window,
+.chart-card.is-fullscreen .plot-coverage,
+.chart-card.is-fullscreen .chart-readout {
+  flex: 0 0 auto;
+}
+
+.chart-card.is-fullscreen .chart {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: auto !important;
+  margin-top: 4px;
+  background: #fff;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+
+.chart-card.is-fullscreen .chart-readout {
+  min-height: 34px;
+  padding-bottom: 0;
+}
+
+@media (max-width: 620px) {
+  .chart-card.is-fullscreen {
+    padding: 12px 14px 10px !important;
+  }
+
+  .chart-card.is-fullscreen .chart-heading {
+    padding-right: 72px;
+  }
+
+  .chart-card.is-fullscreen .chart-heading h3,
+  .chart-card.is-fullscreen:nth-child(1) .chart-heading h3 {
+    font-size: clamp(2.8rem, 14vw, 4.5rem);
+    line-height: .78;
+  }
+
+  .chart-fullscreen-close {
+    top: 7px;
+    right: 11px;
+    font-size: clamp(4.8rem, 21vw, 6.8rem);
+  }
+
+  .chart-card.is-fullscreen .chart {
+    min-height: 180px;
+  }
+}
