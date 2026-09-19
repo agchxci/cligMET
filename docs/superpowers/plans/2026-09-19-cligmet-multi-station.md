@@ -706,7 +706,7 @@ def update_settings(self, station_id: str, payload: dict[str, Any]) -> dict[str,
     return self.settings(station)
 ```
 
-Add a test proving `db.update_settings("ILONDO327", ...)` changes only ILONDO327 controls and leaves `settings.id=1.station_id` equal to `ILONDO1066`.
+Add a test that calls `db.update_settings("ILONDO327", {"forecast": {"temperature_offset": 2.0}})`, then proves only ILONDO327 changed and `settings.id=1.station_id` still equals `ILONDO1066`.
 
 - [ ] **Step 7: Refactor coefficient/calibration methods to require station**
 
@@ -987,7 +987,46 @@ def save_forecast(
     return int(run_id)
 ```
 
-To avoid duplicating the existing 19-column point insert, extract its current SQL/body verbatim to `insert_forecast_point(con, run_id, point)`. The extracted helper must not change any forecast-point field mapping.
+Extract the current 19-column insert verbatim into this helper and call it from `save_forecast`:
+
+```python
+def insert_forecast_point(
+    con: sqlite3.Connection,
+    run_id: int,
+    point: dict[str, Any],
+) -> None:
+    con.execute(
+        """INSERT INTO forecast_points
+           (run_id,target_epoch,timestamp,lead_hours,adjusted_temperature,temperature_lower,
+            temperature_upper,model_temperature,persistence_temperature,humidity,adjusted_pressure,
+            wind_speed,solar_radiation,rain_probability,condition,model_pressure_baseline,
+            local_pressure_projection,model_rain_probability,local_rain_probability)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (
+            run_id,
+            point["target_epoch"],
+            point["timestamp"],
+            point["lead_hours"],
+            point["temperature"],
+            point.get("temperature_lower"),
+            point.get("temperature_upper"),
+            point.get("model_temperature"),
+            point.get("persistence_temperature"),
+            point.get("humidity"),
+            point.get("pressure"),
+            point.get("wind_speed"),
+            point.get("solar_radiation"),
+            point.get("rain_probability"),
+            point.get("condition"),
+            point.get("model_pressure_baseline"),
+            point.get("local_pressure_projection"),
+            point.get("model_rain_probability"),
+            point.get("local_rain_probability"),
+        ),
+    )
+```
+
+The helper is a mechanical extraction only; no forecast-point field mapping changes in this feature.
 
 - [ ] **Step 6: Write calibration-isolation tests**
 
