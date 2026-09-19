@@ -498,10 +498,67 @@
     }
   }
 
+  function fullscreenChartCard() {
+    return document.querySelector('.chart-card.is-fullscreen');
+  }
+
+  function closeFullscreenChart({ restoreFocus = true } = {}) {
+    const card = fullscreenChartCard();
+    if (!card) return false;
+    const svg = card.querySelector('.chart');
+    const closeButton = card.querySelector('.chart-fullscreen-close');
+    card.classList.remove('is-fullscreen');
+    card.removeAttribute('role');
+    card.removeAttribute('aria-modal');
+    card.removeAttribute('aria-labelledby');
+    document.body.classList.remove('chart-fullscreen-open');
+    if (closeButton) closeButton.hidden = true;
+    requestAnimationFrame(renderCharts);
+    if (restoreFocus && svg) requestAnimationFrame(() => svg.focus({ preventScroll: true }));
+    return true;
+  }
+
+  function openFullscreenChart(definition) {
+    const svg = $(definition.id);
+    const card = svg.closest('.chart-card');
+    if (!card || card.classList.contains('is-fullscreen')) return;
+    closeFullscreenChart({ restoreFocus: false });
+    card.classList.add('is-fullscreen');
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    card.setAttribute('aria-labelledby', `${definition.id}Title`);
+    document.body.classList.add('chart-fullscreen-open');
+    const closeButton = card.querySelector('.chart-fullscreen-close');
+    if (closeButton) {
+      closeButton.hidden = false;
+      requestAnimationFrame(() => closeButton.focus({ preventScroll: true }));
+    }
+    requestAnimationFrame(renderCharts);
+    text('chartAnnouncement', `${definition.name} chart expanded to full screen.`);
+  }
+
   function bindChartInteraction(definition) {
     const svg = $(definition.id);
+    const card = svg.closest('.chart-card');
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'chart-fullscreen-close';
+    closeButton.setAttribute('aria-label', `Close ${definition.name} full screen chart`);
+    closeButton.textContent = '×';
+    closeButton.hidden = true;
+    card.append(closeButton);
+    closeButton.addEventListener('click', () => {
+      closeFullscreenChart();
+      text('chartAnnouncement', `${definition.name} chart returned to page view.`);
+    });
+
     const inspectPointer = event => {
       if (event.type === 'pointermove' && event.pointerType === 'touch') return;
+      if (event.type === 'pointerdown' && !card.classList.contains('is-fullscreen')) {
+        event.preventDefault();
+        openFullscreenChart(definition);
+        return;
+      }
       const data = state.charts.get(definition.id);
       if (!data?.timeline.length) return;
       const rect = svg.getBoundingClientRect();
@@ -553,7 +610,14 @@
       previousWidth = width;
       resize();
     }).observe(document.querySelector('.charts-grid'));
-  } else window.addEventListener('resize', resize);
+  }
+  window.addEventListener('resize', resize);
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !fullscreenChartCard()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeFullscreenChart();
+  }, true);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && Date.now() - state.lastAttempt > 60000) loadSnapshot();
   });
