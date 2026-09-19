@@ -207,7 +207,9 @@ with _LOCK:
         get_archive().ingest(payload)
         _ARCHIVE_ERROR = None
     except (OSError, sqlite3.Error, ValueError, TypeError):
-        ...
+        logger.exception("Could not archive published weather history")
+        _ARCHIVE_ERROR = "History could not be saved; check receiver logs and storage."
+        archive_ok = False
     current = read_snapshot(station)
     current_date = parse_iso(current.get("generated_at")) if current else None
     incoming_date = parse_iso(payload["generated_at"])
@@ -277,7 +279,14 @@ def snapshot(station_id: str | None = Query(default=None, max_length=100)) -> JS
     payload = read_snapshot(station)
     if not payload:
         raise HTTPException(404, "No snapshot has been published for this station")
-    return JSONResponse(payload, headers={...existing no-cache headers...})
+    return JSONResponse(
+        payload,
+        headers={
+            "Cache-Control": "no-store, max-age=0",
+            "Pragma": "no-cache",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 ```
 
 - [ ] **Step 7: Make archive bootstrap and default history station deterministic**
@@ -362,7 +371,24 @@ git commit -m "feat: support independent station snapshots"
 
 - [ ] **Step 1: Create a migration snapshot test before changing schema**
 
-In `home/test_multistation.py`, create a legacy DB using the current schema, set non-default ILONDO1066 controls, and add one coefficient-history row:
+Create `home/test_multistation.py` with the module loader first:
+
+```python
+import importlib
+import os
+from pathlib import Path
+
+import pytest
+
+
+def load_cligmet(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLIGMET_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("CLIGMET_STATION_IDS", "ILONDO1066,ILONDO327")
+    import cligmet
+    return importlib.reload(cligmet)
+```
+
+Then create a legacy DB using the current schema, set non-default ILONDO1066 controls, and add one coefficient-history row:
 
 ```python
 def test_migration_preserves_primary_controls_and_history(tmp_path, monkeypatch):
@@ -678,12 +704,30 @@ Monkeypatch `httpx.AsyncClient.get` and assert the request params:
 async def test_fetch_wu_uses_requested_station(tmp_path, monkeypatch):
     module = load_cligmet(tmp_path, monkeypatch)
     module.db.init()
-    module.db.update_global_api_key("secret")
+    with module.db.connect() as con:
+        con.execute("UPDATE settings SET api_key='secret' WHERE id=1")
 
     captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "observations": [{
+                    "stationID": "ILONDO327",
+                    "epoch": 1789833600,
+                    "lat": 51.5,
+                    "lon": -0.12,
+                    "humidity": 55,
+                    "metric": {"temp": 19.0, "pressure": 1012.0},
+                }]
+            }
+
     async def fake_get(self, url, params=None, **kwargs):
-        captured.update(params)
-        return FakeWUResponse("ILONDO327")
+        captured.update(params or {})
+        return FakeResponse()
 
     monkeypatch.setattr(module.httpx.AsyncClient, "get", fake_get)
     await module.fetch_wu(module.WU_CURRENT_URL, "current", "ILONDO327")
@@ -701,13 +745,29 @@ Change:
 async def fetch_wu(endpoint: str, source: str, station_id: str) -> int:
     station = normalise_station_id(station_id)
     settings = db.settings(station, reveal_key=True)
-    ...
+    if not settings["api_key"]:
+        raise RuntimeError("Weather Underground API key is not configured")
     params = {
         "stationId": station,
         "format": "json",
         "units": "m",
+        "numericPrecision": "decimal",
         "apiKey": settings["api_key"],
     }
+    async with httpx.AsyncClient(
+        timeout=25,
+        headers={"User-Agent": f"{APP_NAME}/{APP_VERSION}"},
+    ) as client:
+        response = await client.get(endpoint, params=params)
+        response.raise_for_status()
+        payload = response.json()
+    if payload.get("errors"):
+        raise RuntimeError(payload["errors"][0].get("message", "Weather service error"))
+    observations = payload.get("observations") or []
+    if not observations:
+        raise RuntimeError("The station returned no observations")
+    rows = [normalise_observation(item, source, station) for item in observations]
+    return db.store_observations(rows)
 ```
 
 Ensure every normalised observation row gets `"station_id": station` from the explicit argument rather than implicit settings.
@@ -717,13 +777,38 @@ Ensure every normalised observation row gets `"station_id": station` from the ex
 Refactor:
 
 ```python
-def observation_rows(self, station_id: str, hours: int = 72): ...
-def latest_observation(self, station_id: str): ...
-def coordinates(self, station_id: str): ...
-def latest_forecast(self, station_id: str, hours: int = 24): ...
-def past_forecast(self, station_id: str, hours: int = 24): ...
-def verify_forecasts(self, station_id: str): ...
+def observation_rows(self, station_id: str, hours: int = 72) -> list[dict[str, Any]]:
+    station = normalise_station_id(station_id)
+    cutoff = int(time.time()) - hours * 3600
+    with self.connect() as con:
+        rows = con.execute(
+            "SELECT * FROM observations WHERE station_id=? AND epoch>=? ORDER BY epoch",
+            (station, cutoff),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def latest_observation(self, station_id: str) -> dict[str, Any] | None:
+    station = normalise_station_id(station_id)
+    with self.connect() as con:
+        row = con.execute(
+            "SELECT * FROM observations WHERE station_id=? ORDER BY epoch DESC LIMIT 1",
+            (station,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def coordinates(self, station_id: str) -> tuple[float, float]:
+    latest = self.latest_observation(station_id)
+    latitude = finite(latest.get("latitude")) if latest else None
+    longitude = finite(latest.get("longitude")) if latest else None
+    return (
+        latitude if latitude is not None else DEFAULT_LATITUDE,
+        longitude if longitude is not None else DEFAULT_LONGITUDE,
+    )
 ```
+
+Apply the same explicit `station = normalise_station_id(station_id)` pattern to `latest_forecast`, `past_forecast` and `verify_forecasts`; their existing SQL bodies remain, but every forecast-run lookup/join must filter `forecast_runs.station_id=?`.
 
 Every SQL query includes the explicit station.
 
@@ -745,7 +830,14 @@ At forecast storage:
 db.store_forecast(
     station_id=station,
     issued_epoch=issued_epoch,
-    ...
+    method="cligmet-v3.2",
+    controls=controls,
+    issue_temperature=current["temperature"],
+    raw_station_bias=raw_station_bias,
+    recent_temperature_slope=recent_temperature_slope,
+    model_latitude=latitude,
+    model_longitude=longitude,
+    points=forecast_points,
 )
 ```
 
@@ -772,10 +864,26 @@ Implement:
 def auto_calibrate(station_id: str, force: bool = False) -> tuple[bool, str]:
     station = normalise_station_id(station_id)
     settings = db.settings(station, reveal_key=True)
+    calibration = settings["calibration"]
     metrics = db.calibration_metrics(station)
-    ...
+
+    if calibration["mode"] != "auto":
+        return False, "Manual calibration selected."
+    if calibration["paused"]:
+        return False, "Automatic calibration paused."
+    if not force and metrics["verified_hours"] < calibration["minimum_verified_hours"]:
+        return False, "Collecting verified forecast hours."
+
+    current = db.controls(station)
+    candidate, reason = calibrated_candidate(current, metrics)
+    if candidate == current:
+        return False, "No coefficient change required."
+
     db.save_controls(station, candidate, "auto", reason, update_last_run=True)
+    return True, reason
 ```
+
+If the existing calibration function computes the candidate inline rather than through `calibrated_candidate`, extract that existing calculation unchanged into `calibrated_candidate(current, metrics) -> tuple[Controls, str]`; do not alter its mathematics in this feature.
 
 All `verify_forecasts`, coefficient-history and calibration methods receive the same station.
 
@@ -785,7 +893,7 @@ Monkeypatch `sync_station` so ILONDO327 raises while ILONDO1066 succeeds:
 
 ```python
 @pytest.mark.asyncio
-async def test_sync_once_keeps_other_station_when_one_fails(...):
+async def test_sync_once_keeps_other_station_when_one_fails(tmp_path, monkeypatch):
     result = await module.sync_once(False)
     assert result["stations"]["ILONDO1066"]["ok"] is True
     assert result["stations"]["ILONDO327"]["ok"] is False
@@ -902,10 +1010,17 @@ Monkeypatch the receiver HTTP POST to fail for ILONDO327 only. Assert `publish_a
 ```python
 async def publish_snapshot(station_id: str) -> dict[str, Any]:
     station = normalise_station_id(station_id)
+    config = load_publish_config()
+    if not config["configured"]:
+        return {"ok": False, "station_id": station, "error": "Publishing is not configured"}
     snapshot = public_snapshot(station)
-    ...
+    headers = {
+        "Authorization": f"Bearer {config['publish_token']}",
+        "Content-Type": "application/json",
+    }
     try:
-        response = await client.post(config["publish_url"], json=snapshot, headers=headers)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(config["publish_url"], json=snapshot, headers=headers)
         response.raise_for_status()
         db.set_station_status(station, "last_publish_success", iso_now())
         db.set_station_status(station, "last_publish_error", "")
@@ -1041,14 +1156,17 @@ Mock receiver metadata:
 
 ```python
 local = {
-    "ILONDO1066": Coverage(hours=1300, first=..., last=...),
-    "ILONDO327": Coverage(hours=200, first=..., last=...),
+    "ILONDO1066": {"stored_hours": 1300, "available_from": "2026-07-27T17:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
+    "ILONDO327": {"stored_hours": 200, "available_from": "2026-09-11T04:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
 }
 remote = {
-    "ILONDO1066": Coverage(hours=1300, first=..., last=...),
-    "ILONDO327": Coverage(hours=10, first=..., last=...),
+    "ILONDO1066": {"stored_hours": 1300, "available_from": "2026-07-27T17:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
+    "ILONDO327": {"stored_hours": 10, "available_from": "2026-09-19T02:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
 }
+assert stations_requiring_repair(local, remote) == ["ILONDO327"]
 ```
+
+Define `stations_requiring_repair(local, remote)` in the repair code as the station-by-station comparison used by the live sync command.
 
 Assert the repair plan contains only `ILONDO327`.
 
@@ -1061,7 +1179,7 @@ The existing `hourly_rows()` grouping is already correct. Preserve payload shape
     "schema_version": 1,
     "generated_at": now_iso(),
     "settings": {"station_id": station},
-    "history": {"interval_hours": 1, "aggregation": "mean", "points": [...]},
+    "history": {"interval_hours": 1, "aggregation": "mean", "points": [point(row) for row in batch]},
     "calibration": {"history": []},
 }
 ```
@@ -1250,14 +1368,24 @@ function selectedSnapshots() {
 Normal path:
 
 ```javascript
-const discovery = await fetch(CligmetStations.stationsUrl(configuredURL), ...).then(r => {
+const discovery = await fetch(CligmetStations.stationsUrl(configuredURL), {
+  method: 'GET',
+  cache: 'no-store',
+  credentials: 'omit',
+  signal: controller.signal,
+}).then(r => {
   if (!r.ok) throw new Error('station-discovery');
   return r.json();
 });
 
 const ids = selectedStationIds();
 const snapshots = await Promise.allSettled(ids.map(async stationId => {
-  const response = await fetch(CligmetStations.snapshotUrl(configuredURL, stationId), ...);
+  const response = await fetch(CligmetStations.snapshotUrl(configuredURL, stationId), {
+    method: 'GET',
+    cache: 'no-store',
+    credentials: 'omit',
+    signal: controller.signal,
+  });
   if (!response.ok) throw new Error('service');
   return [stationId, await response.json()];
 }));
@@ -1268,7 +1396,12 @@ Store fulfilled snapshots independently; do not throw away a good station becaus
 Fallback if discovery itself is unavailable/invalid:
 
 ```javascript
-const response = await fetch(configuredURL, ...);
+const response = await fetch(configuredURL, {
+  method: 'GET',
+  cache: 'no-store',
+  credentials: 'omit',
+  signal: controller.signal,
+});
 const snapshot = await response.json();
 const station = String(snapshot.settings?.station_id || 'ILONDO1066').toUpperCase();
 state.compatibilityMode = true;
@@ -1382,8 +1515,32 @@ create({ onChange, getSnapshots, getSelectedStationIds })
 ```javascript
 for (const stationId of getSelectedStationIds()) {
   const key = historyRequestKey(stationId, window);
-  ...
+  if (cache.has(key) || pending.has(key)) continue;
+  const url = getURL('weather');
+  if (!url) {
+    cache.set(key, { failed: true });
+    continue;
+  }
+  url.searchParams.set('start', new Date(window.start).toISOString());
+  url.searchParams.set('end', new Date(window.historyEnd).toISOString());
+  url.searchParams.set('interval_hours', String(window.interval));
   url.searchParams.set('station_id', stationId);
+
+  const issuedRevision = revision;
+  const job = request(url)
+    .then(data => {
+      if (revision !== issuedRevision) return;
+      if (!data || !Array.isArray(data.points) || data.station_id !== stationId) {
+        throw new Error('invalid-history');
+      }
+      cache.set(key, { data });
+      availability.set(stationId, data);
+    })
+    .catch(() => {
+      if (revision === issuedRevision) cache.set(key, { failed: true });
+    })
+    .finally(() => pending.delete(key));
+  pending.set(key, job);
 }
 ```
 
@@ -1421,13 +1578,35 @@ for (const [stationId, snapshot] of selectedSnapshots()) {
   ));
 
   if (state.preferences.measured) {
-    series.push({ stationId, kind: 'observed', label: 'Measured', points: observed, ... });
+    series.push({
+      stationId,
+      kind: 'observed',
+      label: 'Measured',
+      points: observed,
+      colour: COLOURS.stations[stationId],
+      dash: DASH.observed,
+      interval: domain.interval,
+    });
   }
   if (state.preferences.archived) {
-    series.push({ stationId, kind: 'archived', label: 'Archived', points: archived, ... });
+    series.push({
+      stationId,
+      kind: 'archived',
+      label: 'Archived',
+      points: archived,
+      colour: COLOURS.stations[stationId],
+      dash: DASH.archived,
+    });
   }
   if (state.preferences.forecast) {
-    series.push({ stationId, kind: 'forecast', label: 'Forecast', points: forecast, ... });
+    series.push({
+      stationId,
+      kind: 'forecast',
+      label: 'Forecast',
+      points: forecast,
+      colour: COLOURS.stations[stationId],
+      dash: DASH.forecast,
+    });
   }
 }
 ```
@@ -1469,8 +1648,14 @@ The pure readout-builder should receive series objects with `stationId` and retu
 
 ```javascript
 [
-  { stationId: 'ILONDO1066', values: [...] },
-  { stationId: 'ILONDO327', values: [...] },
+  {
+    stationId: 'ILONDO1066',
+    values: [{ kind: 'observed', label: 'OBS', value: 18.4 }],
+  },
+  {
+    stationId: 'ILONDO327',
+    values: [{ kind: 'observed', label: 'OBS', value: 17.9 }],
+  },
 ]
 ```
 
