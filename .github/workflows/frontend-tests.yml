@@ -1,0 +1,35 @@
+name: Frontend tests
+
+on:
+  push:
+    branches: [feature/multi-station-site]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript tests
+        run: node --test tests/*.test.mjs
+      - name: Syntax checks
+        if: always()
+        run: |
+          node --check app.js
+          node --check history-navigation.js
+          if [[ -f station-selection.js ]]; then node --check station-selection.js; fi
+      - name: Export source snapshot
+        if: always()
+        run: |
+          mkdir -p /tmp/site-source
+          cp app.js history-navigation.js station-selection.js multi-station-data.js index.html styles.css config.js /tmp/site-source/
+          cp -r tests /tmp/site-source/tests
+          if [[ -f station-selection.js ]]; then cp station-selection.js /tmp/site-source/; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cligmet-site-source
+          path: /tmp/site-source

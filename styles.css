@@ -2788,3 +2788,87 @@ body.chart-fullscreen-open {
     font-size: .68rem;
   }
 }
+
+
+/* Multi-station controls and comparison views. */
+.station-selector {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 5px 0 4px;
+}
+.station-selector button {
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid #bdbdb9;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: .6875rem;
+  letter-spacing: .035em;
+}
+.station-selector button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+.station-selector button:disabled:not([aria-pressed="true"]) { opacity: .38; cursor: default; }
+
+.dual-current-grid,
+.dual-calibration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.dual-current-card {
+  min-width: 0;
+  border: 1px solid #bdbdb9;
+  background: var(--panel);
+  padding: 20px;
+}
+.dual-current-card[data-station="ILONDO327"] { border-top: 3px solid #9b5b40; }
+.dual-current-card[data-station="ILONDO1066"] { border-top: 3px solid #111111; }
+.dual-current-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: .8125rem;
+  letter-spacing: .04em;
+}
+.dual-temperature {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.dual-temperature > span:first-child { font-size: clamp(3rem, 5vw, 5rem); letter-spacing: -.065em; }
+.dual-measurements { margin: 18px 0 0; border-top: 1px solid var(--line); }
+.dual-measurements > div { display: grid; grid-template-columns: minmax(70px, .6fr) 1fr; gap: 12px; padding: 7px 0; border-bottom: 1px solid #dededb; }
+.dual-measurements dt { margin: 0; color: var(--muted); font-size: .75rem; }
+.dual-measurements dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+.dual-calibration-grid { margin-top: 18px; }
+.dual-calibration-card { border: 1px solid #c9c9c5; padding: 18px; background: var(--panel); }
+.dual-calibration-card h3 { margin: 0 0 4px; font-size: .875rem; }
+.dual-calibration-card > p { margin: 0 0 12px; color: var(--muted); font-size: .75rem; }
+.dual-calibration-card dl { margin: 0; }
+.dual-calibration-card dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid #dededb; }
+.dual-calibration-card dt { color: var(--muted); }
+.dual-calibration-card dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+.readout-station {
+  flex-basis: 100%;
+  margin-top: 4px;
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+
+@media (max-width: 760px) {
+  .station-selector { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  .dual-current-grid, .dual-calibration-grid { grid-template-columns: 1fr; }
+  .dual-current-card { padding: 16px; }
+}

@@ -45,11 +45,42 @@ window.CligmetHistory = (() => {
     });
   }
 
-  function create({ onChange, getSnapshot }) {
+  function historyRequestKey(stationId, window) {
+    return [stationId || '', window.start, window.historyEnd, window.interval].join('|');
+  }
+
+  function create({ onChange, getSnapshot, getSnapshots, getSelectedStationIds }) {
     const cache = new Map(), pending = new Map(), selections = new Map();
-    let revision = 0, snapshotKey = '', availability = null, coefficientData = null, coefficientsRequested = false;
+    const availability = new Map();
+    let revision = 0, snapshotKey = '', coefficientData = null, coefficientsRequested = false;
     let stored = {};
     try { stored = JSON.parse(localStorage.getItem('cligmet.periods.v1')) || {}; } catch { /* Optional preferences. */ }
+
+    function snapshots() {
+      if (typeof getSnapshots === 'function') {
+        const value = getSnapshots();
+        if (value instanceof Map) return value;
+      }
+      const snapshot = typeof getSnapshot === 'function' ? getSnapshot() : null;
+      const station = snapshot?.settings?.station_id;
+      return station ? new Map([[String(station), snapshot]]) : new Map();
+    }
+
+    function selectedIds() {
+      if (typeof getSelectedStationIds === 'function') {
+        const ids = sequence(getSelectedStationIds()).map(value => String(value)).filter(Boolean);
+        if (ids.length) return ids;
+      }
+      return [...snapshots().keys()];
+    }
+
+    function firstSnapshot() {
+      for (const id of selectedIds()) {
+        const snapshot = snapshots().get(id);
+        if (snapshot) return snapshot;
+      }
+      return typeof getSnapshot === 'function' ? getSnapshot() : null;
+    }
 
     function periodFor(id) {
       if (!selections.has(id)) selections.set(id, {
@@ -60,16 +91,28 @@ window.CligmetHistory = (() => {
     }
 
     function baseTime() {
-      const snapshot = getSnapshot();
-      const candidate = stamp(snapshot?.generated_at) ?? stamp(snapshot?.current?.observation?.timestamp) ?? Date.now();
-      // Hourly observations are aligned to UTC hour boundaries.
+      const candidates = [];
+      for (const id of selectedIds()) {
+        const snapshot = snapshots().get(id);
+        const value = stamp(snapshot?.generated_at) ?? stamp(snapshot?.current?.observation?.timestamp);
+        if (value !== null) candidates.push(value);
+      }
+      const candidate = candidates.length ? Math.max(...candidates) : Date.now();
       return Math.floor(candidate / HOUR) * HOUR;
     }
 
     function domain(id) {
       const selection = periodFor(id), base = selection.anchor ?? baseTime();
-      const forecast = sequence(getSnapshot()?.forecast?.points).map(point => stamp(point?.timestamp)).filter(value => value !== null);
-      const forecastEnd = getSnapshot()?.forecast?.available && forecast.length ? Math.max(...forecast) : base + DAY;
+      const forecastTimes = [];
+      for (const station of selectedIds()) {
+        const snapshot = snapshots().get(station);
+        if (!snapshot?.forecast?.available) continue;
+        sequence(snapshot.forecast.points).forEach(point => {
+          const value = stamp(point?.timestamp);
+          if (value !== null) forecastTimes.push(value);
+        });
+      }
+      const forecastEnd = forecastTimes.length ? Math.max(...forecastTimes) : base + DAY;
       const endHistory = shift(base, selection.period, selection.offset);
       let start = shift(base, selection.period, selection.offset - 1);
       if (selection.period === 'forecast') start = base;
@@ -77,7 +120,15 @@ window.CligmetHistory = (() => {
         const times = coefficients().map(item => stamp(item?.timestamp)).filter(value => value !== null);
         start = times.length ? Math.min(...times) : base - 30 * DAY;
       }
-      return { start, end: id !== 'coefficient' && selection.offset === 0 ? Math.max(base + HOUR, forecastEnd) : Math.max(start + HOUR, endHistory), historyEnd: endHistory, boundary: base, period: selection.period, offset: selection.offset, interval: selection.period === 'year' ? 24 : selection.period === 'month' ? 3 : 1 };
+      return {
+        start,
+        end: id !== 'coefficient' && selection.offset === 0 ? Math.max(base + HOUR, forecastEnd) : Math.max(start + HOUR, endHistory),
+        historyEnd: endHistory,
+        boundary: base,
+        period: selection.period,
+        offset: selection.offset,
+        interval: selection.period === 'year' ? 24 : selection.period === 'month' ? 3 : 1,
+      };
     }
 
     function getURL(type) {
@@ -90,10 +141,6 @@ window.CligmetHistory = (() => {
       } catch { return null; }
     }
 
-    function requestKey(window) {
-      return [getSnapshot()?.settings?.station_id || '', window.start, window.historyEnd, window.interval].join('|');
-    }
-
     async function request(url) {
       const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 20000);
       try {
@@ -104,49 +151,60 @@ window.CligmetHistory = (() => {
     }
 
     function ensure(window) {
-      if (!getSnapshot() || window.period === 'forecast') return;
-      const key = requestKey(window);
-      if (cache.has(key) || pending.has(key)) return;
-      const url = getURL('weather');
-      if (!url) { cache.set(key, { failed: true }); return; }
-      url.searchParams.set('start', new Date(window.start).toISOString());
-      url.searchParams.set('end', new Date(window.historyEnd).toISOString());
-      url.searchParams.set('interval_hours', String(window.interval));
-      const station = String(getSnapshot()?.settings?.station_id || '');
-      if (station) url.searchParams.set('station_id', station);
-      const issuedRevision = revision;
-      const job = request(url).then(data => {
-        if (revision !== issuedRevision) return;
-        if (!data || !Array.isArray(data.points) || data.interval_hours !== window.interval || (station && data.station_id !== station)) throw new Error('invalid-history');
-        cache.set(key, { data });
-        availability = data;
-      }).catch(() => { if (revision === issuedRevision) cache.set(key, { failed: true }); }).finally(() => {
-        if (pending.get(key) === job) pending.delete(key);
-        if (revision === issuedRevision) onChange();
-      });
-      pending.set(key, job);
+      if (!selectedIds().length || window.period === 'forecast') return;
+      for (const station of selectedIds()) {
+        const key = historyRequestKey(station, window);
+        if (cache.has(key) || pending.has(key)) continue;
+        const url = getURL('weather');
+        if (!url) { cache.set(key, { failed: true }); continue; }
+        url.searchParams.set('start', new Date(window.start).toISOString());
+        url.searchParams.set('end', new Date(window.historyEnd).toISOString());
+        url.searchParams.set('interval_hours', String(window.interval));
+        url.searchParams.set('station_id', station);
+        const issuedRevision = revision;
+        const job = request(url).then(data => {
+          if (revision !== issuedRevision) return;
+          if (!data || !Array.isArray(data.points) || data.interval_hours !== window.interval || data.station_id !== station) throw new Error('invalid-history');
+          cache.set(key, { data });
+          availability.set(station, data);
+        }).catch(() => {
+          if (revision === issuedRevision) cache.set(key, { failed: true });
+        }).finally(() => {
+          if (pending.get(key) === job) pending.delete(key);
+          if (revision === issuedRevision) onChange();
+        });
+        pending.set(key, job);
+      }
+    }
+
+    function coefficientStation() {
+      const ids = selectedIds();
+      return ids.length === 1 ? ids[0] : null;
     }
 
     function coefficients() {
-      const saved = sequence(coefficientData?.history), current = sequence(getSnapshot()?.calibration?.history);
+      const station = coefficientStation();
+      const snapshot = station ? snapshots().get(station) : null;
+      const saved = sequence(coefficientData?.history), current = sequence(snapshot?.calibration?.history);
       const merged = new Map();
       [...saved, ...current].forEach(item => { if (stamp(item?.timestamp) !== null) merged.set(item.timestamp, item); });
       return [...merged.values()].sort((a, b) => stamp(a.timestamp) - stamp(b.timestamp));
     }
 
     function ensureCoefficients() {
-      if (coefficientsRequested || !getSnapshot()) return;
+      const station = coefficientStation();
+      if (!station || coefficientsRequested || !snapshots().get(station)) return;
       coefficientsRequested = true;
       const url = getURL('coefficients');
       if (!url) { coefficientData = { failed: true }; return; }
-      const station = String(getSnapshot()?.settings?.station_id || '');
-      if (station) url.searchParams.set('station_id', station);
+      url.searchParams.set('station_id', station);
       const issuedRevision = revision;
       request(url).then(data => {
         if (revision !== issuedRevision) return;
-        if (!data || !Array.isArray(data.history) || (station && data.station_id !== station)) throw new Error('invalid-history');
+        if (!data || !Array.isArray(data.history) || data.station_id !== station) throw new Error('invalid-history');
         coefficientData = data;
-      }).catch(() => { if (revision === issuedRevision) coefficientData = { failed: true }; }).finally(() => { if (revision === issuedRevision) onChange(); });
+      }).catch(() => { if (revision === issuedRevision) coefficientData = { failed: true }; })
+        .finally(() => { if (revision === issuedRevision) onChange(); });
     }
 
     function controls(id, window, earliest) {
@@ -166,35 +224,48 @@ window.CligmetHistory = (() => {
     function view(id) {
       const window = domain(id);
       ensure(window);
-      const result = cache.get(requestKey(window));
-      const fallback = aggregate(getSnapshot()?.history?.points, window.interval, window.start, window.historyEnd);
-      const observationPoints = result?.data?.points ?? fallback;
-      const fallbackTimes = sequence(getSnapshot()?.history?.points).map(point => stamp(point?.timestamp)).filter(value => value !== null);
-      const earliest = stamp(availability?.available_from) ?? (fallbackTimes.length ? Math.min(...fallbackTimes) : null);
-      controls(id, window, result?.data ? earliest : null);
+      const observationPointsByStation = new Map();
+      const earliestByStation = new Map();
+      const notes = [];
+      for (const station of selectedIds()) {
+        const snapshot = snapshots().get(station);
+        const key = historyRequestKey(station, window);
+        const result = cache.get(key);
+        const fallback = aggregate(snapshot?.history?.points, window.interval, window.start, window.historyEnd);
+        const points = result?.data?.points ?? fallback;
+        observationPointsByStation.set(station, points);
+        const fallbackTimes = sequence(snapshot?.history?.points).map(point => stamp(point?.timestamp)).filter(value => value !== null);
+        const earliest = stamp(availability.get(station)?.available_from) ?? (fallbackTimes.length ? Math.min(...fallbackTimes) : null);
+        earliestByStation.set(station, earliest);
+        if (window.period === 'forecast' || pending.has(key)) continue;
+        if (result?.failed) notes.push(`${station} ARCHIVE UNAVAILABLE`);
+        else if (!points.length) notes.push(`${station} ${earliest !== null ? `NO DATA · FROM ${label(earliest)}` : 'NO DATA'}`);
+        else if (earliest !== null && earliest > window.start) notes.push(`${station} PARTIAL · FROM ${label(earliest)}`);
+      }
+      const earliestValues = [...earliestByStation.values()].filter(value => value !== null);
+      const earliest = earliestValues.length ? Math.min(...earliestValues) : null;
+      controls(id, window, earliest);
       const note = document.getElementById(`${id}Coverage`);
-      note.dataset.state = '';
-      if (window.period === 'forecast') note.textContent = '';
-      else if (pending.has(requestKey(window))) note.textContent = '';
-      else if (result?.failed) {
-        note.textContent = 'ARCHIVE UNAVAILABLE';
-        note.dataset.state = 'limited';
-      } else if (!observationPoints.length) {
-        note.textContent = earliest !== null ? `NO DATA · FROM ${label(earliest)}` : 'NO DATA';
-        note.dataset.state = 'limited';
-      } else if (earliest !== null && earliest > window.start) {
-        note.textContent = `PARTIAL · FROM ${label(earliest)}`;
-        note.dataset.state = 'limited';
-      } else note.textContent = '';
-      return { ...window, observationPoints };
+      note.textContent = notes.join(' · ');
+      note.dataset.state = notes.length ? 'limited' : '';
+      const first = observationPointsByStation.get(selectedIds()[0]) || [];
+      return { ...window, observationPoints: first, observationPointsByStation, earliestByStation };
     }
 
     function coefficientView() {
+      const station = coefficientStation();
+      const window = domain('coefficient');
+      const note = document.getElementById('coefficientCoverage');
+      if (!station) {
+        controls('coefficient', window, null);
+        note.dataset.state = 'limited';
+        note.textContent = 'SELECT ONE STATION';
+        return { ...window, history: [], savedCount: 0 };
+      }
       ensureCoefficients();
-      const window = domain('coefficient'), all = coefficients();
+      const all = coefficients();
       const first = all.length ? stamp(all[0].timestamp) : null;
       controls('coefficient', window, first);
-      const note = document.getElementById('coefficientCoverage');
       const baseline = [...all].reverse().find(item => stamp(item.timestamp) < window.start);
       const visible = all.filter(item => stamp(item.timestamp) >= window.start && stamp(item.timestamp) <= window.end);
       const selected = baseline ? [{ ...baseline, timestamp: new Date(window.start).toISOString(), carried_forward: true }, ...visible] : visible;
@@ -240,14 +311,13 @@ window.CligmetHistory = (() => {
     }
 
     function refreshed() {
-      const snapshot = getSnapshot();
-      const key = `${snapshot?.settings?.station_id}|${snapshot?.generated_at}`;
+      const key = selectedIds().map(station => `${station}|${snapshots().get(station)?.generated_at || ''}`).join(';');
       if (key !== snapshotKey) {
         snapshotKey = key;
         revision += 1;
         cache.clear();
         pending.clear();
-        availability = null;
+        availability.clear();
         coefficientData = null;
         coefficientsRequested = false;
       } else {
@@ -258,5 +328,5 @@ window.CligmetHistory = (() => {
 
     return { bind, view, coefficientView, refreshed };
   }
-  return { create };
+  return { create, historyRequestKey };
 })();
