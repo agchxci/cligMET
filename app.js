@@ -3,7 +3,8 @@
 (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const HOUR = 3600000;
-  const COLOURS = { ink: '#111111', muted: '#666666', gridMajor: '#d0d0cd', gridMinor: '#eeeeeb', forecast: '#111111', archived: '#777777', band: '#e2e2df', boundary: '#888888' };
+  const COLOURS = { ink: '#111111', muted: '#666666', gridMajor: '#d0d0cd', gridMinor: '#eeeeeb', forecast: '#111111', archived: '#777777', band: '#e2e2df', boundary: '#888888', stations: { ILONDO1066: '#111111', ILONDO327: '#9b5b40' } };
+  const DASH = { observed: '', forecast: '7 4', archived: '2 5' };
   const $ = id => document.getElementById(id);
   const number = value => {
     if (typeof value !== 'number' && typeof value !== 'string') return null;
@@ -36,8 +37,15 @@
     }
   } catch { /* The page also works with browser storage disabled. */ }
 
+  let savedStationSelection = null;
+  try { savedStationSelection = localStorage.getItem('cligmet.station.v1'); } catch { /* Optional device preference. */ }
+
   const state = {
     snapshot: null,
+    snapshots: new Map(),
+    stations: null,
+    stationSelection: window.CligmetStations.normaliseSelection(savedStationSelection),
+    compatibilityMode: false,
     loading: false,
     error: null,
     lastAttempt: 0,
@@ -47,6 +55,20 @@
     selectedTimes: new Map(),
   };
 
+  function selectedStationIds() {
+    return window.CligmetMultiStation.selectedIds(state.stationSelection);
+  }
+
+  function selectedSnapshots() {
+    return selectedStationIds()
+      .map(stationId => [stationId, state.snapshots.get(stationId)])
+      .filter(([, snapshot]) => Boolean(snapshot));
+  }
+
+  function firstSelectedSnapshot() {
+    return selectedSnapshots()[0]?.[1] || state.snapshot || null;
+  }
+
   const chartDefinitions = [
     { id: 'temperatureChart', key: 'temperature', readout: 'temperatureReadout', name: 'Temperature', unit: '°C', digits: 1, band: true },
     { id: 'pressureChart', key: 'pressure', readout: 'pressureReadout', name: 'Pressure', unit: 'hPa', digits: 1 },
@@ -54,7 +76,9 @@
     { id: 'solarChart', key: 'solar_radiation', readout: 'solarReadout', name: 'Solar irradiance', unit: 'W/m²', digits: 0, minimum: 0 },
   ];
   const historyNavigation = window.CligmetHistory.create({
-    getSnapshot: () => state.snapshot,
+    getSnapshot: () => firstSelectedSnapshot(),
+    getSnapshots: () => state.snapshots,
+    getSelectedStationIds: selectedStationIds,
     onChange: () => { renderCharts(); renderCoefficientHistory(); },
   });
   const coefficientDefinitions = {
@@ -81,6 +105,79 @@
       values.set(timestamp, { t: timestamp, value: number(point[key]), source: point });
     });
     return [...values.values()].sort((a, b) => a.t - b.t);
+  }
+
+  function stationFreshness(snapshot) {
+    const observation = snapshot?.current?.available ? snapshot.current.observation : null;
+    const observedAt = time(observation?.timestamp);
+    const publishedAt = time(snapshot?.generated_at);
+    const sourceError = Boolean(snapshot?.status?.last_error);
+    const referenceTimes = [observedAt, publishedAt].filter(value => value !== null);
+    const age = referenceTimes.length ? Math.max(0, Date.now() - Math.min(...referenceTimes)) : null;
+    const fresh = age !== null && age <= 15 * 60000 && observedAt !== null && publishedAt !== null && !sourceError;
+    return {
+      state: !snapshot ? 'missing' : fresh ? 'fresh' : 'stale',
+      label: !snapshot ? 'NO DATA' : fresh ? 'LIVE' : 'STALE',
+      observedAt,
+      sourceError,
+    };
+  }
+
+  function renderStationSelector() {
+    document.querySelectorAll('[data-station-selection]').forEach(button => {
+      const active = button.dataset.stationSelection === state.stationSelection;
+      button.setAttribute('aria-pressed', String(active));
+      button.disabled = state.compatibilityMode && !active;
+    });
+  }
+
+  function renderDualObservationCard(stationId, snapshot) {
+    const observation = snapshot?.current?.available ? snapshot.current.observation || {} : {};
+    const trend = snapshot?.current?.available ? number(snapshot.current?.trends?.change_3h) : null;
+    const freshness = stationFreshness(snapshot);
+    const card = document.createElement('article');
+    card.className = 'dual-current-card';
+    card.dataset.station = stationId;
+
+    const heading = document.createElement('header');
+    heading.className = 'dual-current-heading';
+    const title = document.createElement('strong');
+    title.textContent = stationId;
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.dataset.state = freshness.state;
+    badge.textContent = freshness.label;
+    heading.append(title, badge);
+
+    const temperature = document.createElement('div');
+    temperature.className = 'dual-temperature';
+    temperature.innerHTML = `<span>${format(observation.temperature)}</span><span class="large-unit">°C</span>`;
+
+    const stamp = document.createElement('p');
+    stamp.className = 'reading-time';
+    stamp.textContent = dateLabel(observation.timestamp);
+
+    const rows = document.createElement('dl');
+    rows.className = 'dual-measurements';
+    const measurements = [
+      ['RH', `${format(observation.humidity, 0)} %`],
+      ['PRES', `${format(observation.pressure)} hPa`],
+      ['ΔP3H', `${signed(trend)} hPa`],
+      ['WIND', `${format(observation.wind_speed)} km/h`],
+      ['RAIN', `${format(observation.precip_rate)} mm/h`],
+      ['SOL', `${format(observation.solar_radiation, 0)} W/m²`],
+    ];
+    measurements.forEach(([label, value]) => {
+      const row = document.createElement('div');
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = label;
+      dd.textContent = value;
+      row.append(dt, dd);
+      rows.append(row);
+    });
+    card.append(heading, temperature, stamp, rows);
+    return card;
   }
 
   function updateStatus() {
@@ -122,7 +219,36 @@
   }
 
   function renderObservation() {
-    const snapshot = state.snapshot;
+    renderStationSelector();
+    const both = state.stationSelection === 'both' && !state.compatibilityMode;
+    const dual = $('dualWeatherOverview');
+    const single = $('weatherOverview');
+
+    if (both) {
+      single.hidden = true;
+      dual.hidden = false;
+      dual.replaceChildren();
+      const rows = window.CligmetMultiStation.currentRows(state.snapshots, state.stationSelection);
+      for (const { stationId, snapshot } of rows) dual.append(renderDualObservationCard(stationId, snapshot));
+      text('stationName', 'BOTH STATIONS');
+      text('footerStation', rows.map(row => row.stationId).join(' · ') || 'Stations —');
+      text('stationMeta', `${rows.length}/2 STATIONS · TZ ${localZone.replaceAll('_', ' ').toUpperCase()} · UPDATE 60S`);
+      const display = rows[0]?.snapshot?.settings?.display;
+      if (!state.preferencesInitialised && display) {
+        state.preferences.measured = display.show_measured !== false;
+        state.preferences.forecast = display.show_adjusted !== false;
+        state.preferences.range = display.show_uncertainty !== false;
+        state.preferencesInitialised = true;
+        renderPreferences();
+      }
+      return;
+    }
+
+    dual.hidden = true;
+    single.hidden = false;
+    const snapshot = firstSelectedSnapshot();
+    if (!snapshot) { updateStatus(); return; }
+    state.snapshot = snapshot;
     const station = String(snapshot.settings?.station_id || '—');
     text('stationName', station);
     text('footerStation', station);
@@ -153,7 +279,45 @@
   }
 
   function renderCalibration() {
-    const calibration = state.snapshot.calibration;
+    const both = state.stationSelection === 'both' && !state.compatibilityMode;
+    const summary = $('dualCalibrationSummary');
+    const performance = $('calibrationPerformance');
+    const details = $('modelDetails');
+
+    if (both) {
+      summary.hidden = false;
+      performance.hidden = true;
+      details.hidden = true;
+      summary.replaceChildren();
+      text('calibrationMode', 'BOTH STATIONS');
+      text('calibrationStatus', 'Independent calibration state for each station. Select one station for coefficient history.');
+      for (const [stationId, snapshot] of selectedSnapshots()) {
+        const calibration = snapshot.calibration || {};
+        const metrics = calibration.metrics || {};
+        const controls = calibration.controls || {};
+        const card = document.createElement('article');
+        card.className = 'dual-calibration-card';
+        const title = document.createElement('h3');
+        title.textContent = stationId;
+        const mode = document.createElement('p');
+        mode.textContent = calibration.mode === 'auto' ? calibration.paused ? 'AUTO · PAUSED' : 'AUTO' : 'MANUAL';
+        const values = document.createElement('dl');
+        values.innerHTML = `
+          <div><dt>Verified</dt><dd>${format(metrics.verified_hours, 0)} h</dd></div>
+          <div><dt>cligMET MAE</dt><dd>${format(metrics.cligmet_mae, 3)} °C</dd></div>
+          <div><dt>Open-Meteo MAE</dt><dd>${format(metrics.model_mae, 3)} °C</dd></div>
+          <div><dt>Temp adj.</dt><dd>${signed(controls.temperature_offset)} °C</dd></div>`;
+        card.append(title, mode, values);
+        summary.append(card);
+      }
+      return;
+    }
+
+    summary.hidden = true;
+    performance.hidden = false;
+    details.hidden = false;
+    const snapshot = firstSelectedSnapshot();
+    const calibration = snapshot?.calibration;
     const metrics = calibration?.metrics || {};
     const controls = calibration?.controls || {};
     text('calibrationMode', !calibration ? 'Unavailable' : calibration.mode === 'auto' ? calibration.paused ? 'Auto calibration paused' : 'Auto calibration' : 'Manual coefficients');
@@ -225,13 +389,13 @@
     }).join(' ');
   }
 
-  function addBand(parent, points, x, y, domain) {
+  function addBand(parent, points, x, y, domain, colour = COLOURS.band) {
     let group = [];
     const flush = () => {
       if (group.length > 1) {
         const upper = group.map((point, index) => `${index ? 'L' : 'M'}${x(point.t)},${y(point.upper)}`).join(' ');
         const lower = [...group].reverse().map(point => `L${x(point.t)},${y(point.lower)}`).join(' ');
-        parent.append(svgElement('path', { d: `${upper} ${lower} Z`, fill: COLOURS.band, 'fill-opacity': .45, stroke: 'none' }));
+        parent.append(svgElement('path', { d: `${upper} ${lower} Z`, fill: colour, 'fill-opacity': .14, stroke: 'none' }));
       }
       group = [];
     };
