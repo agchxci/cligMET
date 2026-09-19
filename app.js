@@ -324,8 +324,8 @@
         transform: `rotate(90 ${labelX} ${labelY})`
       }, 'FCST'));
     }
-    const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true' });
-    const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3' });
+    const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true', 'class': 'chart-crosshair' });
+    const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3', 'class': 'chart-crosshair-line' });
     guide.append(guideLine);
     svg.append(guide);
     const timeline = [...new Set(series.flatMap(item => item.points.filter(point => point.value !== null).map(point => point.t)).concat(useBand ? forecast.filter(point => number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null).map(point => point.t) : []))].sort((a, b) => a - b);
@@ -363,7 +363,15 @@
       const element = document.createElement('span');
       element.textContent = phrase;
       values.append(element);
-      guide.append(svgElement('circle', { cx: x(point.t), cy: y(point.value), r: 3.7, fill: '#fff', stroke: item.colour, 'stroke-width': 2 }));
+      const fullscreen = $(definition.id).closest('.chart-card')?.classList.contains('is-fullscreen');
+      guide.append(svgElement('circle', {
+        cx: x(point.t), cy: y(point.value),
+        r: fullscreen ? 5.2 : 3.7,
+        fill: '#fff',
+        stroke: item.colour,
+        'stroke-width': fullscreen ? 2.4 : 2,
+        'class': 'chart-crosshair-point'
+      }));
     });
     if (useBand) {
       const point = forecast.find(candidate => candidate.t === selectedTime);
@@ -556,23 +564,47 @@
       text('chartAnnouncement', `${definition.name} chart returned to page view.`);
     });
 
+    let activePointerId = null;
+
     const inspectPointer = event => {
-      if (event.type === 'pointermove' && event.pointerType === 'touch') return;
-      if (event.type === 'pointerdown' && !card.classList.contains('is-fullscreen')) {
+      const fullscreen = card.classList.contains('is-fullscreen');
+      if (event.type === 'pointerdown' && !fullscreen) {
         event.preventDefault();
         openFullscreenChart(definition);
         return;
       }
+      if (!fullscreen) return;
+      if (event.type === 'pointermove' && event.pointerType !== 'mouse' && activePointerId !== event.pointerId) return;
+
       const data = state.charts.get(definition.id);
       if (!data?.timeline.length) return;
       const rect = svg.getBoundingClientRect();
-      const pointerX = (event.clientX - rect.left) / rect.width * data.width;
+      const pointerX = Math.max(0, Math.min(rect.width, event.clientX - rect.left)) / rect.width * data.width;
       const target = data.domain.start + (pointerX - data.plot.left) / data.plot.width * (data.domain.end - data.domain.start);
       const nearest = data.timeline.reduce((best, candidate) => Math.abs(candidate - target) < Math.abs(best - target) ? candidate : best);
       inspectChart(data, nearest, event.type === 'pointerdown');
     };
+
+    svg.addEventListener('pointerdown', event => {
+      if (!card.classList.contains('is-fullscreen')) {
+        inspectPointer(event);
+        return;
+      }
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      if (svg.setPointerCapture) {
+        try { svg.setPointerCapture(event.pointerId); } catch { /* Pointer capture is optional. */ }
+      }
+      inspectPointer(event);
+    });
     svg.addEventListener('pointermove', inspectPointer);
-    svg.addEventListener('pointerdown', inspectPointer);
+    const releasePointer = event => {
+      if (activePointerId !== event.pointerId) return;
+      activePointerId = null;
+      if (svg.hasPointerCapture?.(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+    };
+    svg.addEventListener('pointerup', releasePointer);
+    svg.addEventListener('pointercancel', releasePointer);
     svg.addEventListener('keydown', event => {
       if (!card.classList.contains('is-fullscreen') && ['Enter', ' '].includes(event.key)) {
         event.preventDefault();
