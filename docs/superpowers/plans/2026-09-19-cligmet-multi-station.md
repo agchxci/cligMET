@@ -144,16 +144,28 @@ In `main.py`, add:
 import re
 
 DEFAULT_STATION_ID = os.getenv("DEFAULT_STATION_ID", "ILONDO1066").strip().upper() or "ILONDO1066"
-CONFIGURED_STATIONS = tuple(dict.fromkeys(
-    value.strip().upper()
-    for value in os.getenv("STATION_IDS", "ILONDO1066,ILONDO327").split(",")
-    if value.strip()
-))
+CONFIGURED_STATIONS = tuple(dict.fromkeys((
+    DEFAULT_STATION_ID,
+    *(
+        value.strip().upper()
+        for value in os.getenv("STATION_IDS", "ILONDO1066,ILONDO327").split(",")
+        if value.strip()
+    ),
+)))
 STATION_RE = re.compile(r"^[A-Z0-9_-]{1,100}$")
 
 
-def normalise_station_id(value: str | None) -> str:
-    station = (value or DEFAULT_STATION_ID).strip().upper()
+def normalise_station_id(
+    value: str | None,
+    *,
+    default_to_primary: bool = True,
+) -> str:
+    if value is None or not str(value).strip():
+        if not default_to_primary:
+            raise HTTPException(400, "settings.station_id is required")
+        station = DEFAULT_STATION_ID
+    else:
+        station = str(value).strip().upper()
     if station not in CONFIGURED_STATIONS or not STATION_RE.fullmatch(station):
         raise HTTPException(404, "Unknown station")
     return station
@@ -200,7 +212,10 @@ Inside `publish`:
 
 ```python
 settings = payload.get("settings")
-station = normalise_station_id(settings.get("station_id") if isinstance(settings, dict) else None)
+station = normalise_station_id(
+    settings.get("station_id") if isinstance(settings, dict) else None,
+    default_to_primary=False,
+)
 
 with _LOCK:
     try:
@@ -1285,94 +1300,298 @@ cligMET Home Publisher multi-station v1.2
 
 ---
 
-### Task 5: Make the history self-heal explicitly verify every station
+### Task 5: Make history backfill/self-heal a sourced two-station command
 
 **Files:**
 - Modify: `home/backfill_history.py`
-- Modify/create tests for history sync alongside home publisher tests
-- Modify the installed history-sync invocation/service only after code verification.
+- Modify: `home/test_multistation.py`
+- Create: `systemd/cligmet-history-sync.service`
+- Create: `systemd/cligmet-history-sync.timer`
+- Modify: `home/README.md`
 
 **Interfaces:**
-- Consumes receiver `/history.json?station_id=...` and `/history/import`.
-- Produces per-station coverage comparison/repair.
+- Consumes receiver `/history.json?station_id=...` and authenticated `/history/import`.
+- Produces:
+  - `station_ids(db_path) -> list[str]`
+  - `local_coverage(db_path, station_id) -> dict`
+  - `remote_coverage(client, base_url, station_id, start, end) -> dict`
+  - `coverage_complete(local, remote) -> bool`
+  - `repair_receiver(db_path, publish_url, token, dry_run=False) -> dict`
+  - CLI `backfill_history.py --repair [--dry-run]`.
 
-- [ ] **Step 1: Pin station enumeration**
+- [ ] **Step 1: Write RED station-enumeration and coverage tests**
 
 Add:
 
 ```python
+def test_station_ids_lists_both_stations(tmp_path):
+    db_path = build_observation_db(tmp_path, {
+        "ILONDO1066": [("2026-09-19T10:00:00Z", 18.0)],
+        "ILONDO327": [("2026-09-19T10:00:00Z", 17.5)],
+    })
+    assert backfill.station_ids(db_path) == ["ILONDO1066", "ILONDO327"]
+
+
+def test_only_incomplete_station_requires_repair():
+    local_a = {
+        "stored_hours": 1300,
+        "available_from": "2026-07-27T17:00:00Z",
+        "available_to": "2026-09-19T11:00:00Z",
+    }
+    remote_a = dict(local_a)
+    local_b = {
+        "stored_hours": 200,
+        "available_from": "2026-09-11T04:00:00Z",
+        "available_to": "2026-09-19T11:00:00Z",
+    }
+    remote_b = {
+        "stored_hours": 10,
+        "available_from": "2026-09-19T02:00:00Z",
+        "available_to": "2026-09-19T11:00:00Z",
+    }
+
+    assert backfill.coverage_complete(local_a, remote_a) is True
+    assert backfill.coverage_complete(local_b, remote_b) is False
+```
+
+Run and verify RED.
+
+- [ ] **Step 2: Add station and local-coverage helpers**
+
+Implement:
+
+```python
 def station_ids(db_path: Path) -> list[str]:
     with sqlite3.connect(db_path) as db:
-        return [
-            str(row[0]).upper()
-            for row in db.execute("SELECT DISTINCT station_id FROM observations ORDER BY station_id")
-            if row[0]
-        ]
+        rows = db.execute(
+            "SELECT DISTINCT UPPER(station_id) FROM observations "
+            "WHERE station_id IS NOT NULL AND TRIM(station_id)<>'' ORDER BY 1"
+        ).fetchall()
+    return [str(row[0]) for row in rows]
+
+
+def local_coverage(db_path: Path, station_id: str) -> dict:
+    rows = hourly_rows(db_path, station_id)
+    if not rows:
+        return {"stored_hours": 0, "available_from": None, "available_to": None}
+    epochs = [int(row["hour_epoch"]) for row in rows]
+    return {
+        "stored_hours": len(rows),
+        "available_from": iso(min(epochs)),
+        "available_to": iso(max(epochs)),
+    }
+
+
+def coverage_complete(local: dict, remote: dict) -> bool:
+    return (
+        int(remote.get("stored_hours") or 0) >= int(local.get("stored_hours") or 0)
+        and remote.get("available_from") == local.get("available_from")
+        and remote.get("available_to") == local.get("available_to")
+    )
 ```
 
-Test:
+- [ ] **Step 3: Add receiver history lookup**
+
+Add:
 
 ```python
-assert station_ids(db_path) == ["ILONDO1066", "ILONDO327"]
+def receiver_base(publish_url: str) -> str:
+    base = publish_url.rstrip("/")
+    return base[:-8].rstrip("/") if base.endswith("/publish") else base
+
+
+def remote_coverage(
+    client: httpx.Client,
+    base_url: str,
+    station_id: str,
+    start: str,
+    end: str,
+) -> dict:
+    response = client.get(
+        receiver_base(base_url) + "/history.json",
+        params={
+            "start": start,
+            "end": end,
+            "interval_hours": 1,
+            "station_id": station_id,
+        },
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return {
+        "stored_hours": payload.get("stored_hours", 0),
+        "available_from": payload.get("available_from"),
+        "available_to": payload.get("available_to"),
+    }
 ```
 
-- [ ] **Step 2: Add completeness test where one station is complete and one is incomplete**
+Use a 400-day bounded query window beginning at the local `available_from` and ending at least one hour after the local `available_to`.
 
-Mock receiver metadata:
+- [ ] **Step 4: Write RED repair-isolation test**
+
+Mock a client where ILONDO1066 coverage is complete and ILONDO327 coverage is incomplete. Capture `POST /history/import` calls.
+
+Assert:
 
 ```python
-local = {
-    "ILONDO1066": {"stored_hours": 1300, "available_from": "2026-07-27T17:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
-    "ILONDO327": {"stored_hours": 200, "available_from": "2026-09-11T04:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
-}
-remote = {
-    "ILONDO1066": {"stored_hours": 1300, "available_from": "2026-07-27T17:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
-    "ILONDO327": {"stored_hours": 10, "available_from": "2026-09-19T02:00:00Z", "available_to": "2026-09-19T11:00:00Z"},
-}
-assert stations_requiring_repair(local, remote) == ["ILONDO327"]
+result = backfill.repair_receiver(db_path, "https://receiver.example/publish", "token")
+assert result["ILONDO1066"]["repaired"] is False
+assert result["ILONDO327"]["repaired"] is True
+assert {call["settings"]["station_id"] for call in imported_payloads} == {"ILONDO327"}
 ```
 
-Define `stations_requiring_repair(local, remote)` in the repair code as the station-by-station comparison used by the live sync command.
+Also assert every import payload has `"live_snapshot_replaced": False` in the receiver response path.
 
-Assert the repair plan contains only `ILONDO327`.
+- [ ] **Step 5: Implement per-station repair**
 
-- [ ] **Step 3: Keep backfill payloads single-station**
-
-The existing `hourly_rows()` grouping is already correct. Preserve payload shape:
+Implement:
 
 ```python
-{
-    "schema_version": 1,
-    "generated_at": now_iso(),
-    "settings": {"station_id": station},
-    "history": {"interval_hours": 1, "aggregation": "mean", "points": [point(row) for row in batch]},
-    "calibration": {"history": []},
-}
+def repair_receiver(
+    db_path: Path,
+    publish_url: str,
+    token: str,
+    *,
+    dry_run: bool = False,
+) -> dict[str, dict]:
+    results = {}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+    with httpx.Client(timeout=45.0, headers=headers) as client:
+        for station in station_ids(db_path):
+            local = local_coverage(db_path, station)
+            if not local["stored_hours"]:
+                results[station] = {"repaired": False, "reason": "no-local-history"}
+                continue
+
+            start = local["available_from"]
+            end_epoch = int(datetime.fromisoformat(
+                local["available_to"].replace("Z", "+00:00")
+            ).timestamp()) + 3600
+            end = iso(end_epoch)
+            remote = remote_coverage(client, publish_url, station, start, end)
+
+            if coverage_complete(local, remote):
+                results[station] = {"repaired": False, "local": local, "remote": remote}
+                continue
+
+            if dry_run:
+                results[station] = {"repaired": False, "would_repair": True, "local": local, "remote": remote}
+                continue
+
+            station_rows = hourly_rows(db_path, station)
+            for batch in chunks(station_rows, 1000):
+                payload = {
+                    "schema_version": 1,
+                    "generated_at": now_iso(),
+                    "settings": {"station_id": station},
+                    "history": {
+                        "interval_hours": 1,
+                        "aggregation": "mean",
+                        "points": [point(row) for row in batch],
+                    },
+                    "calibration": {"history": []},
+                }
+                response = client.post(import_endpoint(publish_url), json=payload)
+                response.raise_for_status()
+                if response.json().get("live_snapshot_replaced") is not False:
+                    raise RuntimeError("Receiver did not preserve the live snapshot")
+
+            verified = remote_coverage(client, publish_url, station, start, end)
+            if not coverage_complete(local, verified):
+                raise RuntimeError(f"{station}: receiver history repair did not verify")
+            results[station] = {"repaired": True, "local": local, "remote": verified}
+
+    return results
 ```
 
-Never combine station rows in one import request.
+- [ ] **Step 6: Add `--repair` CLI mode**
 
-- [ ] **Step 4: Run a dry-run against a two-station test DB**
+Extend argparse:
 
-Expected output contains separate lines for ILONDO1066 and ILONDO327 and does not upload.
+```python
+parser.add_argument(
+    "--repair",
+    action="store_true",
+    help="Compare every local station with the receiver and repair incomplete station archives",
+)
+```
 
-- [ ] **Step 5: After receiver + home publisher deployment, run live repair dry-run**
+Before the existing one-shot backfill path:
 
-On the home server:
+```python
+if args.repair:
+    if not args.token and not args.dry_run:
+        parser.error("Publish token is required for repair")
+    result = repair_receiver(args.db, args.url, args.token, dry_run=args.dry_run)
+    for station, status in result.items():
+        print(f"{station}: {status}")
+    return 0
+```
+
+- [ ] **Step 7: Add reproducible systemd units**
+
+Create `systemd/cligmet-history-sync.service`:
+
+```ini
+[Unit]
+Description=cligMET public history cache repair
+After=network-online.target cligmet.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/agchxci/cligmet/cligMET_Home_Publisher_v1.1
+ExecStart=/usr/bin/python3 /home/agchxci/cligmet/cligMET_Home_Publisher_v1.1/backfill_history.py --repair
+```
+
+Create `systemd/cligmet-history-sync.timer`:
+
+```ini
+[Unit]
+Description=Run cligMET history repair hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+Unit=cligmet-history-sync.service
+
+[Install]
+WantedBy=timers.target
+```
+
+If the live Python interpreter is inside a virtual environment, replace `/usr/bin/python3` at install time with the interpreter already used by `cligmet.service`; do not create a second environment.
+
+- [ ] **Step 8: Run package tests and dry-run**
 
 ```bash
-cd /home/agchxci/cligmet/cligMET_Home_Publisher_v1.1
-python backfill_history.py --dry-run
+python -m pytest -q home/test_cligmet.py home/test_multistation.py
+python home/backfill_history.py --repair --dry-run
 ```
 
-Expected: both station IDs appear once ILONDO327 observations exist.
+Expected: tests PASS; dry-run prints separate station states and uploads nothing.
 
-Then run the configured automatic history sync once and verify both station coverages independently.
+- [ ] **Step 9: Install/enable timer only after live dual station data exists**
 
-- [ ] **Step 6: Commit/package**
+Copy the tested units to `/etc/systemd/system/`, then:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now cligmet-history-sync.timer
+sudo systemctl start cligmet-history-sync.service
+sudo systemctl status cligmet-history-sync.service --no-pager
+```
+
+Inspect the service log and require separate ILONDO1066 / ILONDO327 coverage messages.
+
+- [ ] **Step 10: Commit/package**
 
 ```text
-feat: verify and repair public history per station
+feat: repair public history independently per station
 ```
 
 ---
