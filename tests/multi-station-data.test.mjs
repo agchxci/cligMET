@@ -42,3 +42,16 @@ test('series sources retain station and data type identity', () => {
   assert.equal(series[0].points[0].temperature, 10);
   assert.equal(series[3].points[0].temperature, 30);
 });
+
+
+test('both mode keeps a missing station visible instead of silently dropping it', () => {
+  const snapshots = new Map([
+    ['ILONDO1066', {current:{available:true,observation:{temperature:10}}}],
+  ]);
+  const rows = Array.from(data.currentRows(snapshots, 'both'));
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].stationId, 'ILONDO1066');
+  assert.equal(rows[1].stationId, 'ILONDO327');
+  assert.equal(rows[1].snapshot, null);
+  assert.equal(rows[1].observation, null);
+});
