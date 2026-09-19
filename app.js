@@ -418,21 +418,25 @@
     const left = definition.key === 'pressure' ? 62 : 42;
     const plot = { left, right: width - 12, top: 27, bottom: height - 55 };
     plot.width = plot.right - plot.left;
-    const snapshot = state.snapshot;
     const clipPoints = points => points.filter(point => point.t >= domain.start && point.t <= domain.end);
-    const observed = clipPoints(normalisePoints(domain.observationPoints, definition.key));
-    const forecast = clipPoints(normalisePoints(snapshot.forecast?.available ? snapshot.forecast.points : [], definition.key));
-    const archived = clipPoints(normalisePoints(snapshot.past_forecast?.available ? snapshot.past_forecast.points : [], definition.key));
-    const series = [];
-    if (state.preferences.measured) series.push({ label: 'Measured', points: observed, colour: COLOURS.ink, dash: '', interval: domain.interval });
-    if (state.preferences.archived) series.push({ label: 'Archived', points: archived, colour: COLOURS.archived, dash: '2 5' });
-    if (state.preferences.forecast) series.push({ label: 'Forecast', points: forecast, colour: COLOURS.forecast, dash: '6 4' });
+    const histories = domain.observationPointsByStation instanceof Map ? domain.observationPointsByStation : new Map();
+    const rawSeries = window.CligmetMultiStation.seriesSources(state.snapshots, histories, state.stationSelection, state.preferences);
+    const labelFor = kind => kind === 'observed' ? 'Measured' : kind === 'forecast' ? 'Forecast' : 'Archived';
+    const series = rawSeries.map(item => ({
+      ...item,
+      label: labelFor(item.kind),
+      points: clipPoints(normalisePoints(item.points, definition.key)),
+      colour: COLOURS.stations[item.stationId] || COLOURS.ink,
+      dash: DASH[item.kind] || '',
+      interval: item.kind === 'observed' ? domain.interval : 1,
+    }));
+    const forecastSeries = series.filter(item => item.kind === 'forecast');
     const useBand = definition.band && state.preferences.range;
     const values = series.flatMap(item => item.points.map(point => point.value)).filter(value => value !== null);
-    if (useBand) forecast.forEach(point => {
+    if (useBand) forecastSeries.forEach(item => item.points.forEach(point => {
       const lower = number(point.source.temperature_lower), upper = number(point.source.temperature_upper);
       if (lower !== null && upper !== null && lower <= upper) values.push(lower, upper);
-    });
+    }));
     if (!values.length) {
       const visible = state.preferences.measured || state.preferences.forecast || state.preferences.archived || useBand;
       drawEmpty(svg, width, height, visible ? 'No data in this time window' : 'Select a series above');
@@ -445,16 +449,12 @@
     const x = stamp => plot.left + (stamp - domain.start) / (domain.end - domain.start || 1) * plot.width;
     const y = value => plot.top + (bounds.high - value) / (bounds.high - bounds.low || 1) * (plot.bottom - plot.top);
     const forecastX = Math.max(plot.left, Math.min(plot.right, x(domain.boundary)));
-    const horizontalDivisions = 4;
-    for (let i = 0; i <= horizontalDivisions; i++) {
-      const value = bounds.low + (bounds.high - bounds.low) * i / horizontalDivisions;
+    for (let i = 0; i <= 4; i++) {
+      const value = bounds.low + (bounds.high - bounds.low) * i / 4;
       const yy = y(value);
-      const major = true;
       svg.append(svgElement('line', { x1: plot.left, x2: plot.right, y1: yy, y2: yy, stroke: COLOURS.gridMajor, 'stroke-width': .75 }));
-      if (major) {
-        const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
-        svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 10, 'class': 'chart-axis-label chart-axis-value' }, format(value, digits)));
-      }
+      const digits = definition.key === 'pressure' || bounds.high - bounds.low < 5 ? 1 : 0;
+      svg.append(svgElement('text', { x: plot.left - 8, y: yy + 4, 'text-anchor': 'end', fill: COLOURS.muted, 'font-size': 10, 'class': 'chart-axis-label chart-axis-value' }, format(value, digits)));
     }
     drawTimeTicks(svg, domain, plot, x);
     const defs = svgElement('defs');
@@ -463,10 +463,10 @@
     defs.append(clip);
     svg.append(defs);
     const lines = svgElement('g', { 'clip-path': `url(#${definition.id}-clip)` });
-    if (useBand) addBand(lines, forecast, x, y, domain);
+    if (useBand) forecastSeries.forEach(item => addBand(lines, item.points, x, y, domain, item.colour));
     series.forEach(item => {
       const maximumGap = (item.interval || 1) * 1.75 * HOUR;
-      lines.append(svgElement('path', { d: linePath(item.points, x, y, maximumGap), fill: 'none', stroke: item.colour, 'stroke-width': item.label === 'Archived' ? 1.7 : 2.2, 'stroke-dasharray': item.dash, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      lines.append(svgElement('path', { d: linePath(item.points, x, y, maximumGap), fill: 'none', stroke: item.colour, 'stroke-width': item.kind === 'archived' ? 1.7 : 2.2, 'stroke-dasharray': item.dash, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
       const valid = item.points.filter(point => point.value !== null);
       valid.forEach((point, index) => {
         const prev = valid[index - 1], next = valid[index + 1];
@@ -478,22 +478,16 @@
     svg.append(lines);
     if (forecastX > plot.left + 2) svg.append(svgElement('line', { x1: forecastX, x2: forecastX, y1: plot.top, y2: plot.bottom, stroke: COLOURS.boundary, 'stroke-width': 1.2, 'stroke-dasharray': '2 3' }));
     if (definition.key === 'temperature' && plot.right - forecastX > 34) {
-      const labelX = Math.min(forecastX + 10, plot.right - 12);
-      const labelY = plot.top + 7;
-      svg.append(svgElement('text', {
-        x: labelX, y: labelY,
-        fill: COLOURS.muted,
-        'font-size': 9,
-        'letter-spacing': 1.2,
-        transform: `rotate(90 ${labelX} ${labelY})`
-      }, 'FCST'));
+      const labelX = Math.min(forecastX + 10, plot.right - 12), labelY = plot.top + 7;
+      svg.append(svgElement('text', { x: labelX, y: labelY, fill: COLOURS.muted, 'font-size': 9, 'letter-spacing': 1.2, transform: `rotate(90 ${labelX} ${labelY})` }, 'FCST'));
     }
     const guide = svgElement('g', { visibility: 'hidden', 'aria-hidden': 'true', 'class': 'chart-crosshair' });
     const guideLine = svgElement('line', { y1: plot.top, y2: plot.bottom, stroke: '#7a7a7a', 'stroke-width': 1, 'stroke-dasharray': '3 3', 'class': 'chart-crosshair-line' });
     guide.append(guideLine);
     svg.append(guide);
-    const timeline = [...new Set(series.flatMap(item => item.points.filter(point => point.value !== null).map(point => point.t)).concat(useBand ? forecast.filter(point => number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null).map(point => point.t) : []))].sort((a, b) => a - b);
-    const data = { definition, domain, plot, width, x, y, series, forecast, useBand, timeline, guide, guideLine };
+    const bandTimes = useBand ? forecastSeries.flatMap(item => item.points.filter(point => number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null).map(point => point.t)) : [];
+    const timeline = [...new Set(series.flatMap(item => item.points.filter(point => point.value !== null).map(point => point.t)).concat(bandTimes))].sort((a, b) => a - b);
+    const data = { definition, domain, plot, width, x, y, series, forecastSeries, useBand, timeline, guide, guideLine };
     state.charts.set(definition.id, data);
     readout.textContent = '';
     const selectedTime = state.selectedTimes.get(definition.id);
@@ -526,7 +520,7 @@
   }
 
   function inspectChart(data, selectedTime, announce) {
-    const { definition, series, forecast, useBand, guide, guideLine, x, y } = data;
+    const { definition, series, forecastSeries, useBand, guide, guideLine, x, y } = data;
     state.selectedTimes.set(definition.id, selectedTime);
     guide.setAttribute('visibility', 'visible');
     guideLine.setAttribute('x1', x(selectedTime));
@@ -540,35 +534,39 @@
     const values = document.createElement('span');
     values.className = 'readout-values';
     const parts = [];
-    series.forEach(item => {
-      const point = item.points.find(candidate => candidate.t === selectedTime && candidate.value !== null);
-      if (!point) return;
-      const count = number(point.source?.sample_counts?.[definition.key]);
-      const shortLabel = item.label === 'Measured' ? 'OBS' : item.label === 'Forecast' ? 'FCST' : 'ARCH';
-      const coverage = item.label === 'Measured' && item.interval > 1 && count !== null ? ` ${count}/${item.interval}H` : '';
-      const phrase = `${shortLabel} ${format(point.value, definition.digits)}${definition.unit}${coverage}`;
-      parts.push(phrase);
-      const element = document.createElement('span');
-      element.textContent = phrase;
-      values.append(element);
-      const fullscreen = $(definition.id).closest('.chart-card')?.classList.contains('is-fullscreen');
-      guide.append(svgElement('circle', {
-        cx: x(point.t), cy: y(point.value),
-        r: fullscreen ? 5.2 : 3.7,
-        fill: '#fff',
-        stroke: item.colour,
-        'stroke-width': fullscreen ? 2.4 : 2,
-        'class': 'chart-crosshair-point'
-      }));
-    });
-    if (useBand) {
-      const point = forecast.find(candidate => candidate.t === selectedTime);
-      if (point && number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null && Number(point.source.temperature_lower) <= Number(point.source.temperature_upper)) {
-        const phrase = `RNG ${format(point.source.temperature_lower)}–${format(point.source.temperature_upper)}°C`;
-        parts.push(phrase);
+    for (const stationId of selectedStationIds()) {
+      const stationSeries = series.filter(item => item.stationId === stationId);
+      const stationValues = stationSeries.flatMap(item => {
+        const point = item.points.find(candidate => candidate.t === selectedTime && candidate.value !== null);
+        return point ? [[item, point]] : [];
+      });
+      if (!stationValues.length && !useBand) continue;
+      const stationHeading = document.createElement('span');
+      stationHeading.className = 'readout-station';
+      stationHeading.textContent = stationId;
+      values.append(stationHeading);
+      stationValues.forEach(([item, point]) => {
+        const count = number(point.source?.sample_counts?.[definition.key]);
+        const shortLabel = item.kind === 'observed' ? 'OBS' : item.kind === 'forecast' ? 'FCST' : 'ARCH';
+        const coverage = item.kind === 'observed' && item.interval > 1 && count !== null ? ` ${count}/${item.interval}H` : '';
+        const phrase = `${shortLabel} ${format(point.value, definition.digits)}${definition.unit}${coverage}`;
+        parts.push(`${stationId} ${phrase}`);
         const element = document.createElement('span');
         element.textContent = phrase;
         values.append(element);
+        const fullscreen = $(definition.id).closest('.chart-card')?.classList.contains('is-fullscreen');
+        guide.append(svgElement('circle', { cx: x(point.t), cy: y(point.value), r: fullscreen ? 5.2 : 3.7, fill: '#fff', stroke: item.colour, 'stroke-width': fullscreen ? 2.4 : 2, 'class': 'chart-crosshair-point' }));
+      });
+      if (useBand) {
+        const forecast = forecastSeries.find(item => item.stationId === stationId);
+        const point = forecast?.points.find(candidate => candidate.t === selectedTime);
+        if (point && number(point.source.temperature_lower) !== null && number(point.source.temperature_upper) !== null && Number(point.source.temperature_lower) <= Number(point.source.temperature_upper)) {
+          const phrase = `RNG ${format(point.source.temperature_lower)}–${format(point.source.temperature_upper)}°C`;
+          parts.push(`${stationId} ${phrase}`);
+          const element = document.createElement('span');
+          element.textContent = phrase;
+          values.append(element);
+        }
       }
     }
     readout.append(heading, values);
@@ -577,13 +575,14 @@
   }
 
   function renderCharts() {
-    if (!state.snapshot) return;
+    if (!state.snapshots.size) return;
     chartDefinitions.forEach(definition => renderChart(definition, historyNavigation.view(definition.id.replace('Chart', ''))));
-    text('forecastNote', '');
+    text('forecastNote', state.stationSelection === 'both' && !state.compatibilityMode ? 'ILONDO1066 dark · ILONDO327 brown · solid measured · dashed forecast · dotted archive' : '');
     text('timezoneNote', '');
   }
 
   function renderCoefficientHistory() {
+    if (state.stationSelection === 'both' && !state.compatibilityMode) return;
     if (!$('modelDetails').open) return;
     const svg = $('coefficientChart');
     const key = $('coefficientSelect').value;
