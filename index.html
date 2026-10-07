@@ -12,6 +12,7 @@
   <script src="station-selection.js" defer></script>
   <script src="multi-station-data.js" defer></script>
   <script src="history-navigation.js" defer></script>
+  <script src="station-map.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body class="editorial-system">
@@ -193,6 +194,32 @@
             <p class="calibration-note" id="calibrationNote">Calibration information will appear when available.</p>
           </div>
         </details>
+      </section>
+
+      <section id="stations" class="stations-section" aria-labelledby="stationsTitle">
+        <h2 id="stationsTitle" class="visually-hidden">Station locations</h2>
+        <div class="section-register" aria-hidden="true"><span class="section-number">04</span><span class="section-ref">CLG/04.1</span></div>
+        <div class="station-map-layout">
+          <figure class="station-map" id="stationMap" data-selection="both">
+            <div class="station-map-canvas">
+              <img src="london-outline.svg" width="1000" height="780" alt="Outline map of Greater London's boroughs and the River Thames" decoding="async">
+              <button type="button" class="map-marker" data-map-station="ILONDO1066" data-label-side="left" aria-pressed="false"><span class="map-dot" aria-hidden="true"></span><span class="map-label"><span class="visually-hidden">Show </span><span class="map-id">ILONDO1066</span> <span class="map-reading"></span> <span class="map-state"></span></span></button>
+              <button type="button" class="map-marker" data-map-station="ILONDO327" data-label-side="right" aria-pressed="false"><span class="map-dot" aria-hidden="true"></span><span class="map-label"><span class="visually-hidden">Show </span><span class="map-id">ILONDO327</span> <span class="map-reading"></span> <span class="map-state"></span></span></button>
+              <span class="map-river-label" aria-hidden="true">R. THAMES</span>
+              <span class="map-north" aria-hidden="true"><span>↑</span>N</span>
+              <span class="map-scale" id="stationMapScale" aria-hidden="true"><span class="map-scale-bar"></span><span class="map-scale-label">5 KM</span></span>
+            </div>
+          </figure>
+          <div class="station-key-panel">
+            <dl class="station-key">
+              <div class="station-key-row" data-station="ILONDO1066"><dt>ILONDO1066</dt><dd>cligMET_N1 · Hoxton</dd><dd class="station-key-position" data-station-coordinates="ILONDO1066">—</dd></div>
+              <div class="station-key-row" data-station="ILONDO327"><dt>ILONDO327</dt><dd>cligCAST</dd><dd class="station-key-position" data-station-coordinates="ILONDO327">—</dd></div>
+              <div class="station-key-row station-key-separation"><dt>Separation</dt><dd id="stationSeparation">—</dd></div>
+            </dl>
+            <p class="station-key-hint">Tap a station to show its readings. Use BOTH above to compare.</p>
+          </div>
+        </div>
+        <p class="map-attribution">Boundaries: London Datastore, Open Government Licence v3.0. Contains National Statistics and Ordnance Survey data © Crown copyright and database right 2015.</p>
       </section>
     </main>
 
