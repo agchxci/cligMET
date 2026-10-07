@@ -2,7 +2,7 @@ name: Frontend tests
 
 on:
   push:
-    branches: [feature/multi-station-site]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
