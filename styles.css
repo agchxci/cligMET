@@ -1881,3 +1881,112 @@ body.chart-fullscreen-open {
   .map-north span { font-size: .8125rem; }
 }
 @media (max-width: 540px) { .map-river-label { display: none; } }
+
+/* Rain map: latest radar, then the forecast for the next four hours, in ink. */
+.map-radar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+}
+.radar-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.radar-play {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: .625rem;
+  line-height: 1;
+}
+.radar-play:hover:not(:disabled) { background: var(--ink); color: #fff; }
+.radar-play:disabled { opacity: .35; cursor: default; }
+.radar-timeline { min-width: 0; }
+.radar-timeline input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.radar-timeline input[type="range"]:disabled { opacity: .35; cursor: default; }
+.radar-timeline input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--ink); }
+.radar-timeline input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 18px;
+  margin-top: -8.5px;
+  border: 0;
+  border-radius: 0;
+  background: var(--ink);
+}
+.radar-timeline input[type="range"]::-moz-range-track { height: 1px; background: var(--ink); }
+.radar-timeline input[type="range"]::-moz-range-thumb { width: 10px; height: 18px; border: 0; border-radius: 0; background: var(--ink); }
+.radar-ticks {
+  position: relative;
+  height: 14px;
+  margin: 2px 5px 0;
+  font-size: .5625rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.radar-ticks span { position: absolute; top: 0; transform: translateX(-50%); }
+.radar-ticks span:nth-child(1) { left: 0; transform: none; margin-left: -5px; }
+.radar-ticks span:nth-child(2) { left: 25%; }
+.radar-ticks span:nth-child(3) { left: 50%; }
+.radar-ticks span:nth-child(4) { left: 75%; }
+.radar-ticks span:nth-child(5) { left: 100%; transform: translateX(-100%); margin-left: 5px; }
+.radar-readout {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+}
+.radar-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .5625rem;
+  font-weight: 400;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.radar-ramp {
+  width: 64px;
+  height: 6px;
+  background: linear-gradient(90deg, rgba(17, 17, 17, .14), rgba(17, 17, 17, .8));
+}
+.radar-credit {
+  grid-column: 1 / -1;
+  margin: -2px 0 0;
+  font-size: .5625rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) { .radar-play { transition: none; } }
