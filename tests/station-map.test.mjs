@@ -74,6 +74,19 @@ test('page includes the map section, both markers and the app hook', () => {
   assert.match(html, /data-map-station="ILONDO1066"/);
   assert.match(html, /data-map-station="ILONDO327"/);
   assert.match(html, /src="london-outline\.svg"/);
-  assert.match(html, /Crown copyright/);
+  assert.ok(html.indexOf('id="stations"') < html.indexOf('id="observations"'), 'map is the first section');
+  assert.match(svg, /Crown copyright/);
   assert.match(app, /window\.CligmetStationMap\.update\(state\.stationSelection, readings\)/);
+});
+
+test('the Thames is drawn as one continuous line from Sunbury to Erith', () => {
+  const lines = [...svg.matchAll(/<path class="thames" d="([^"]+)"/g)];
+  assert.equal(lines.length, 1);
+  const subpaths = lines[0][1].split('M').filter(Boolean);
+  assert.equal(subpaths.length, 1);
+  const points = subpaths[0].split('L').map(pair => pair.trim().split(/\s+/).map(Number));
+  const [west, east] = [points[0], points.at(-1)];
+  const toLon = x => map.PROJECTION.lonMin + (x - map.PROJECTION.pad) / (map.PROJECTION.cosLat * map.PROJECTION.scale);
+  assert.ok(toLon(west[0]) < -0.38, `west end ${toLon(west[0])}`);
+  assert.ok(toLon(east[0]) > 0.17, `east end ${toLon(east[0])}`);
 });
