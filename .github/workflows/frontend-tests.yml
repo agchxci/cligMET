@@ -2,7 +2,7 @@ name: Frontend tests
 
 on:
   push:
-    branches: [feature/multi-station-site]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -24,11 +24,12 @@ jobs:
           node --check history-navigation.js
           if [[ -f station-selection.js ]]; then node --check station-selection.js; fi
           node --check station-map.js
+          node --check station-radar.js
       - name: Export source snapshot
         if: always()
         run: |
           mkdir -p /tmp/site-source
-          cp app.js history-navigation.js station-selection.js multi-station-data.js station-map.js london-outline.svg index.html styles.css config.js /tmp/site-source/
+          cp app.js history-navigation.js station-selection.js multi-station-data.js station-map.js station-radar.js london-outline.svg index.html styles.css config.js /tmp/site-source/
           cp -r tests /tmp/site-source/tests
           if [[ -f station-selection.js ]]; then cp station-selection.js /tmp/site-source/; fi
       - uses: actions/upload-artifact@v4

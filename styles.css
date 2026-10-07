@@ -1,10 +1,5 @@
 :root {
   color-scheme: light;
-  --page: #e0ffff;
-  --ink: #111111;
-  --muted: #5c5c5c;
-  --line: #b8b8b8;
-  --panel: #ffffff;
   --accent: #111111;
   --warning: #444444;
   --warning-bg: #eeeeee;
@@ -13,7 +8,7 @@
 }
 * { box-sizing: border-box; }
 html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 24px; }
-body { margin: 0; color: var(--ink); background: var(--page); font-family: var(--font-mono); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body { margin: 0; color: var(--ink); font-family: var(--font-mono); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; }
 a { color: inherit; text-underline-offset: .23em; }
 button, select, input[type="checkbox"] { cursor: pointer; }
@@ -24,223 +19,98 @@ button, select { color: var(--ink); border-radius: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; top: 10px; left: 10px; padding: 12px 18px; background: var(--ink); color: white; z-index: 100; transform: translateY(-200%); }
 .skip-link:focus { transform: translateY(0); }
-.site-shell { max-width: 1360px; padding: 0 48px; margin: 0 auto; }
-.masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 32px 0 28px; border-bottom: 1px solid var(--ink); }
-.wordmark { display: block; font-size: clamp(4.5rem, 8.1vw, 7.4rem); line-height: .96; font-weight: 500; letter-spacing: -.065em; text-decoration: none; padding-right: .075em; }
-.masthead-meta { display: grid; gap: 3px; text-align: right; font-size: .875rem; padding-bottom: 3px; }
-.eyebrow { margin: 0 0 10px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.site-shell { padding: 0 48px; margin: 0 auto; }
+.masthead { justify-content: space-between; }
+.wordmark { display: block; text-decoration: none; padding-right: .075em; }
+.masthead-meta { display: grid; }
+.eyebrow { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
 .masthead-meta .eyebrow { margin: 0 0 3px; }
-.station-name { font-size: 1rem; }
 .muted { color: var(--muted); }
-.navigation { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 13px 0; border-bottom: 1px solid var(--line); }
-.nav-links { display: flex; align-items: center; gap: 30px; font-size: .875rem; }
-.nav-links a { display: flex; align-items: center; min-height: 44px; text-decoration: none; }
 .nav-links a:hover { color: var(--accent); text-decoration: underline; }
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ink); min-height: 44px; padding: 8px 14px; background: transparent; font-size: .875rem; border-radius: 0; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 0; }
 .button:hover { background: var(--ink); color: #fff; }
-.button[aria-busy="true"] svg { animation: spin 1.4s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.observations { padding-top: 32px; }
-.section-heading { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin: 0 0 22px; }
-.section-heading h1, .section-heading h2 { margin: 0; font-weight: 500; font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.15; letter-spacing: -.035em; }
-.overview-heading { align-items: center; margin-bottom: 6px; }
-.overview-heading h1 { font-size: 1.5rem; letter-spacing: -.025em; }
-.status-badge, .mode-badge { display: inline-flex; align-items: center; padding: 6px 10px; border: 1px solid var(--line); background: #f4f4f4; border-radius: 0; font-size: .875rem; white-space: nowrap; }
-.status-badge[data-state="fresh"] { background: var(--ink); color: #fff; border-color: var(--ink); }
-.status-badge[data-state="stale"], .status-badge[data-state="loading"] { background: var(--warning-bg); color: var(--warning); border-color: #b8b8b8; }
-.status-badge[data-state="error"] { background: #f1f1f1; color: var(--error); border-color: #a6a6a6; }
-.status-line { font-size: .875rem; color: var(--muted); min-height: 22px; margin-bottom: 20px; max-width: 90ch; }
+.status-badge, .mode-badge { display: inline-flex; align-items: center; border-radius: 0; white-space: nowrap; }
+.status-badge[data-state="fresh"] { border-color: var(--ink); }
+.status-badge[data-state="stale"], .status-badge[data-state="loading"] { border-color: #b8b8b8; }
+.status-badge[data-state="error"] { border-color: #a6a6a6; }
 .status-line[data-state="error"], .status-line[data-state="stale"] { color: var(--warning); }
-.overview-grid { display: grid; grid-template-columns: 1.12fr 1fr; gap: 16px; }
-.current-panel { display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: 1fr auto; gap: 14px 5px; border: 1px solid var(--ink); padding: 25px 26px 20px; background: var(--panel); min-width: 0; }
+.current-panel { grid-template-rows: 1fr auto; min-width: 0; }
 .primary-reading { z-index: 1; }
-.metric-label { margin: 0; font-size: .875rem; color: var(--muted); font-weight: 400; line-height: 1.4; }
-.temperature-reading { display: flex; align-items: baseline; gap: 3px; white-space: nowrap; margin: 12px 0 8px; line-height: 1; font-variant-numeric: tabular-nums; }
-.temperature-reading > span:first-child { font-size: clamp(4rem, 6.3vw, 6.4rem); letter-spacing: -.075em; }
-.large-unit { font-size: clamp(1.5rem, 2.2vw, 2rem); margin-left: 5px; align-self: flex-start; padding-top: .3em; }
-.reading-time { font-size: .875rem; color: var(--muted); margin: 15px 0 0; }
-.field-art { align-self: center; margin: 0 0 0 3px; min-width: 0; text-align: center; }
-.field-art img { display: block; width: 100%; max-width: 205px; height: auto; max-height: 180px; object-fit: contain; mix-blend-mode: multiply; margin: 0 auto; }
-.field-art figcaption { margin: 6px 0 0; color: var(--muted); font-size: .75rem; letter-spacing: .03em; }
-.secondary-readings { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid var(--line); padding-top: 17px; margin-top: 8px; }
-.secondary-value { margin-top: 5px; font-size: 1.8rem; letter-spacing: -.035em; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.temperature-reading { display: flex; gap: 3px; white-space: nowrap; line-height: 1; font-variant-numeric: tabular-nums; }
+.reading-time { color: var(--muted); }
 .unit { color: var(--muted); margin-left: 7px; font-size: .875rem; font-weight: 400; letter-spacing: 0; white-space: nowrap; }
-.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-width: 0; }
-.metric { border: 1px solid var(--line); background: #f5f5f5; padding: 21px 22px 17px; display: flex; flex-direction: column; min-width: 0; }
-.metric-reading { margin: 15px 0 6px; line-height: 1.15; font-size: clamp(1.9rem, 2.7vw, 2.8rem); letter-spacing: -.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.metric-note { margin: auto 0 0; padding-top: 7px; font-size: .8125rem; color: var(--muted); }
-.weather-section, .calibration-section { margin-top: 58px; scroll-margin-top: 20px; }
-.range-control { display: grid; gap: 5px; flex-shrink: 0; }
-.range-control label { font-size: .75rem; color: var(--muted); }
+.weather-section, .calibration-section { scroll-margin-top: 20px; }
 select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; background-color: var(--panel); border: 1px solid var(--line); border-radius: 0; font-size: .875rem; }
-.chart-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 5px 20px; padding: 12px 0 16px; border-top: 1px solid var(--line); }
-.series-options { border: 0; display: flex; gap: 5px 18px; flex-wrap: wrap; margin: 0; padding: 0; }
-.series-options label { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; font-size: .875rem; cursor: pointer; }
-.series-options input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.chart-toolbar { display: flex; flex-wrap: wrap; align-items: center; }
+.series-options { border: 0; display: flex; flex-wrap: wrap; margin: 0; padding: 0; }
+.series-options label { display: inline-flex; align-items: center; }
+.series-options input { margin: 0; accent-color: var(--accent); }
 .series-options label:has(input:not(:checked)) { color: var(--muted); }
-.legend-line { display: inline-block; width: 21px; height: 0; border-top: 2px solid var(--ink); }
+.legend-line { display: inline-block; height: 0; border-top: 2px solid var(--ink); }
 .legend-line.forecast { border-top: 2px dashed var(--accent); }
 .legend-line.archived { border-top: 2px dotted #6a6a6a; }
-.legend-band { width: 20px; height: 9px; background: #dedede; border: 1px solid #b5b5b5; }
-.chart-guidance { color: var(--muted); font-size: .8125rem; margin: 0; }
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.chart-card { min-width: 0; border: 1px solid #8f8f8f; background: var(--panel); padding: 18px 18px 0; }
-.chart-heading { display: flex; gap: 15px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-.chart-heading h3 { margin: 0; font-family: var(--font-mono); font-size: .8125rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.chart-unit { color: var(--muted); font-family: var(--font-mono); font-size: .75rem; letter-spacing: .04em; }
-.plot-navigation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 9px; }
+.legend-band { height: 9px; border: 1px solid #b5b5b5; }
+.chart-guidance { color: var(--muted); margin: 0; }
+.charts-grid { display: grid; }
+.chart-card { min-width: 0; }
+.chart-heading { display: flex; gap: 15px; align-items: baseline; justify-content: space-between; }
+.chart-heading h3 { margin: 0; }
+.chart-unit { color: var(--muted); font-family: var(--font-mono); letter-spacing: .04em; }
+.plot-navigation { display: flex; flex-wrap: wrap; justify-content: space-between; }
 .plot-navigation select { flex: 1 1 120px; min-width: 110px; }
-.plot-page-buttons { display: flex; align-items: center; gap: 5px; }
-.plot-arrow { min-width: 44px; padding-inline: 10px; font-size: 1.125rem; }
+.plot-page-buttons { display: flex; align-items: center; }
+.plot-arrow { padding-inline: 10px; }
 .plot-latest { padding-inline: 11px; }
 .plot-navigation button:disabled { cursor: default; opacity: .4; }
 .plot-navigation button:disabled:hover { background: transparent; color: var(--ink); }
-.plot-window { min-height: 1.5em; margin: 0 0 5px; color: var(--ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
-.plot-coverage { min-height: 3em; margin: 0 0 11px; color: var(--muted); font-size: .8125rem; line-height: 1.5; }
 .plot-coverage[data-state="limited"], .plot-coverage[data-state="error"] { color: var(--warning); }
-.chart { display: block; width: 100%; height: 270px; overflow: visible; touch-action: pan-y; border: 1px solid #c6c6c6; border-radius: 0; background: #fff; }
+.chart { display: block; width: 100%; overflow: visible; touch-action: pan-y; border-radius: 0; }
 .chart:focus-visible { outline-offset: 1px; }
 .chart text, .coefficient-chart text { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.chart-readout { min-height: 79px; font-family: var(--font-mono); font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); margin-top: 8px; padding: 10px 0 12px; line-height: 1.55; font-variant-numeric: tabular-nums; }
-.chart-readout strong { color: var(--ink); font-weight: 500; }
+.chart-readout { font-family: var(--font-mono); }
+.chart-readout strong { color: var(--ink); }
 .readout-time { display: block; margin-bottom: 2px; }
-.readout-values { display: flex; flex-wrap: wrap; gap: 1px 12px; }
-.chart-footnotes { display: flex; justify-content: space-between; gap: 8px 24px; margin-top: 14px; font-size: .8125rem; color: var(--muted); }
+.chart-footnotes { justify-content: space-between; gap: 8px 24px; color: var(--muted); }
 .chart-footnotes p { margin: 0; }
 .chart-footnotes p:last-child { text-align: right; flex-shrink: 0; }
-.calibration-section { border-top: 1px solid var(--ink); padding-top: 30px; }
-.section-intro { font-size: .9375rem; color: var(--muted); margin: -6px 0 23px; max-width: 85ch; }
-.performance-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.performance-metric { padding: 23px 20px 23px 0; min-width: 0; }
-.performance-metric + .performance-metric { padding-left: 20px; border-left: 1px solid var(--line); }
-.performance-metric h3 { margin: 0 0 15px; font-size: .875rem; line-height: 1.4; font-weight: 400; min-height: 2.8em; }
-.performance-value { font-size: 2.7rem; line-height: 1.15; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
-.performance-metric p { margin: 12px 0 0; color: var(--muted); font-size: .8125rem; }
+.section-intro { color: var(--muted); }
+.performance-metric h3 { margin: 0 0 15px; font-weight: 400; }
+.performance-metric p { margin: 12px 0 0; color: var(--muted); }
 .improvement-metric .performance-value { color: var(--accent); }
-.model-details { margin-top: 25px; border: 1px solid var(--line); background: #f5f5f5; }
-.model-details summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; cursor: pointer; list-style: none; font-size: .9375rem; }
+.model-details summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; cursor: pointer; list-style: none; }
 .model-details summary::-webkit-details-marker { display: none; }
 .summary-symbol { font-size: 1.5rem; line-height: 1; }
 .model-details[open] .summary-symbol { transform: rotate(45deg); }
-.model-details[open] summary { border-bottom: 1px solid var(--line); }
-.details-content { padding: 0 20px 20px; }
-.coefficients-grid { display: grid; grid-template-columns: repeat(5, 1fr); margin: 0; padding: 20px 0; gap: 16px; }
-.coefficients-grid dt { font-size: .8125rem; color: var(--muted); min-height: 2.8em; line-height: 1.4; }
-.coefficients-grid dd { font-size: 1.25rem; margin: 7px 0 0; font-variant-numeric: tabular-nums; }
+.coefficients-grid { display: grid; margin: 0; }
+.coefficients-grid dt { color: var(--muted); min-height: 2.8em; line-height: 1.4; }
+.coefficients-grid dd { margin: 7px 0 0; font-variant-numeric: tabular-nums; }
 .coefficient-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 10px; }
 .coefficient-header h3 { font-size: 1rem; font-weight: 500; margin: 0; }
-.coefficient-chart { display: block; width: 100%; height: 250px; margin-top: 15px; background: var(--panel); border: 1px solid var(--line); }
-.calibration-note, #coefficientDescription { font-size: .8125rem; color: var(--muted); margin: 12px 0 0; }
-.site-footer { margin-top: 62px; padding: 24px 0 34px; border-top: 1px solid var(--ink); display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; }
-.footer-wordmark { font-size: 2rem; letter-spacing: -.06em; line-height: 1.1; text-decoration: none; }
-.site-footer p { font-size: .875rem; margin: 7px 0 0; color: var(--muted); }
-.footer-detail { display: grid; text-align: right; gap: 5px; font-size: .8125rem; color: var(--muted); }
-.footer-detail a { margin-top: 5px; }
+.coefficient-chart { display: block; width: 100%; margin-top: 15px; }
+.calibration-note, #coefficientDescription { color: var(--muted); margin: 12px 0 0; }
 .noscript { position: fixed; bottom: 0; inset-inline: 0; padding: 15px; background: var(--warning-bg); color: var(--ink); text-align: center; }
-@media (min-width: 1300px) { .current-panel { padding: 27px 28px 23px; } }
 @media (max-width: 1050px) {
-  .site-shell { padding-inline: 30px; }
-  .overview-grid { grid-template-columns: 1fr 1fr; }
-  .current-panel { padding: 20px; }
-  .field-art img { max-height: 140px; }
-  .metric { padding: 18px 15px; }
-  .metric-reading .unit { display: block; margin: 6px 0 0; }
-  .metric-reading { font-size: 2rem; }
-  .chart-card { padding: 18px 14px 0; }
   .chart-guidance { width: 100%; }
-  .performance-value { font-size: 2.2rem; }
 }
 @media (max-width: 780px) {
-  .site-shell { padding-inline: 22px; }
-  .masthead { padding-top: 26px; }
   .masthead-meta .eyebrow { max-width: 180px; }
-  .overview-grid { grid-template-columns: 1fr; }
-  .current-panel { padding: 25px; }
-  .temperature-reading > span:first-child { font-size: 6.5rem; }
-  .field-art img { max-height: 190px; }
-  .metrics-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .metric-reading { font-size: 1.8rem; }
-  .metric-label { min-height: 2.8em; }
-  .primary-reading .metric-label, .secondary-readings .metric-label { min-height: auto; }
-  .charts-grid { grid-template-columns: 1fr; }
-  .chart-card { padding: 21px 20px 0; }
-  .chart { height: 290px; }
-  .performance-grid { grid-template-columns: 1fr 1fr; }
-  .performance-metric:nth-child(3) { border-left: 0; padding-left: 0; }
-  .performance-metric:nth-child(n+3) { border-top: 1px solid var(--line); }
-  .performance-metric h3 { min-height: auto; }
-  .coefficients-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .chart-footnotes { flex-direction: column; }
   .chart-footnotes p:last-child { text-align: left; }
-  .range-control { flex-shrink: 1; }
 }
 @media (max-width: 540px) {
-  .site-shell { padding-inline: 16px; }
-  .masthead { gap: 20px; padding: 27px 0 20px; align-items: flex-start; flex-direction: column; }
-  .wordmark { font-size: clamp(4.8rem, 22vw, 7rem); }
-  .masthead-meta { width: 100%; grid-template-columns: 1fr auto; text-align: left; gap: 2px 12px; padding: 0; }
+  .masthead { flex-direction: column; }
   .masthead-meta .eyebrow { max-width: none; grid-column: 1 / -1; }
-  .masthead-meta .muted { text-align: right; align-self: center; font-size: .8125rem; }
-  .station-name { font-size: .875rem; }
-  .navigation { gap: 8px; padding-block: 7px; }
-  .nav-links { gap: 17px; font-size: .875rem; flex-wrap: wrap; }
-  .nav-links a:nth-child(2) { max-width: 60px; line-height: 1.2; }
-  .button { padding: 8px 10px; }
+  .masthead-meta .muted { align-self: center; }
   .refresh-button { gap: 5px; }
-  .observations { padding-top: 26px; }
-  .overview-heading h1 { font-size: 1.35rem; }
-  .status-badge, .mode-badge { font-size: .8125rem; }
-  .status-line { margin-top: 8px; margin-bottom: 17px; }
-  .current-panel { padding: 21px 20px 18px; gap: 12px 3px; }
-  .temperature-reading > span:first-child { font-size: 5.35rem; }
-  .large-unit { font-size: 1.5rem; }
-  .field-art img { max-height: 145px; }
-  .field-art figcaption { font-size: .75rem; }
-  .reading-time { font-size: .8125rem; }
-  .secondary-readings { margin-top: 6px; }
-  .secondary-value { font-size: 1.75rem; }
-  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .metric { padding: 17px 18px 15px; }
-  .metric-label { min-height: auto; }
-  .metric-reading { font-size: 2.1rem; }
-  .metric-reading .unit { display: inline; margin: 0 0 0 5px; font-size: .8125rem; }
-  .metric-note { font-size: .8125rem; }
-  .weather-section, .calibration-section { margin-top: 40px; }
-  .section-heading { align-items: flex-start; flex-direction: column; gap: 15px; margin-bottom: 19px; }
-  .overview-heading { flex-direction: row; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .section-heading h2 { font-size: 2rem; }
-  .range-control { width: 100%; }
-  .range-control select { width: 100%; }
-  .series-options { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 0 9px; }
-  .series-options label { gap: 6px; font-size: .8125rem; }
-  .legend-line, .legend-band { width: 15px; flex-shrink: 0; }
-  .chart-toolbar { padding-bottom: 17px; gap: 8px; }
-  .chart-guidance { font-size: .8125rem; }
-  .chart-card { padding: 18px 12px 0; }
-  .chart { height: 255px; }
-  .chart-heading h3 { font-size: .9375rem; }
-  .chart-readout { min-height: 98px; }
-  .performance-metric, .performance-metric + .performance-metric { padding-right: 12px; }
-  .performance-metric + .performance-metric { padding-left: 14px; }
-  .performance-metric:nth-child(3) { padding-left: 0; }
-  .performance-metric h3 { min-height: 2.8em; }
-  .performance-value { font-size: 2.3rem; }
-  .coefficients-grid { grid-template-columns: 1fr 1fr; }
-  .model-details summary { padding: 16px; }
-  .details-content { padding: 0 15px 20px; }
+  .series-options { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .legend-line, .legend-band { flex-shrink: 0; }
   .coefficient-header { align-items: flex-start; flex-direction: column; }
   .coefficient-header select { width: 100%; }
-  .site-footer { margin-top: 40px; flex-direction: column; align-items: flex-start; }
-  .footer-detail { text-align: left; }
+  .site-footer { flex-direction: column; }
 }
 @media (max-width: 360px) {
-  .site-shell { padding-inline: 12px; }
-  .nav-links { gap: 10px; }
-  .refresh-button svg { display: none; }
-  .temperature-reading > span:first-child { font-size: 4.5rem; }
   .current-panel { padding-inline: 15px; }
-  .metric-reading { font-size: 1.85rem; }
-  .metric { padding-inline: 14px; }
   .series-options label { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -248,12 +118,9 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 @media print {
-  body { background: white; }
   .site-shell { padding: 0; }
   .navigation, .chart-toolbar, .range-control, .footer-detail a { display: none; }
   .chart-card, .overview-grid, .performance-grid { break-inside: avoid; }
-  .chart { height: 220px; }
-  .chart-readout { min-height: 45px; }
 }
 
 /* 1990s technical-instrument treatment for plot controls and annotations. */
@@ -269,182 +136,76 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
-.plot-window { letter-spacing: .025em; }
-.plot-coverage, .chart-guidance { font-size: .75rem; }
-.coefficient-chart { border-color: #8f8f8f; border-radius: 0; }
-
+.coefficient-chart { border-radius: 0; }
 
 /* Instrument-console UI pass */
-.site-shell { max-width: 1420px; }
-.masthead { padding: 22px 0 18px; align-items: end; }
-.wordmark { font-size: clamp(4rem, 7.2vw, 6.6rem); line-height: .9; }
-.masthead-meta { gap: 2px; font-size: .75rem; }
-.technical-meta { margin-top: 5px; color: var(--muted); font-size: .6875rem; letter-spacing: .055em; text-transform: uppercase; }
-.navigation { padding: 7px 0; }
-.nav-links { gap: 24px; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
-.button { min-height: 34px; padding: 5px 10px; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+.masthead-meta { gap: 2px; }
+.technical-meta { margin-top: 5px; color: var(--muted); letter-spacing: .055em; text-transform: uppercase; }
+.button { text-transform: uppercase; letter-spacing: .04em; }
 
-.observations { padding-top: 22px; }
-.overview-heading { margin-bottom: 5px; align-items: end; }
-.overview-heading h1 { font-size: 1.15rem; text-transform: uppercase; letter-spacing: .045em; font-weight: 700; }
-.overview-heading .eyebrow { margin-bottom: 3px; }
-.status-badge { padding: 0; border: 0; background: transparent !important; color: var(--ink) !important; font-size: .6875rem; font-weight: 700; letter-spacing: .08em; }
-.status-badge::before { content: "●"; margin-right: 7px; }
+.status-badge { padding: 0; border: 0; background: transparent !important; color: var(--ink) !important; }
+.status-badge::before { content: "●"; }
 .status-badge[data-state="stale"]::before { content: "○"; }
 .status-badge[data-state="loading"]::before { content: "◌"; }
 .status-badge[data-state="error"]::before { content: "×"; }
-.status-line { min-height: 18px; margin: 0 0 10px; font-size: .6875rem; line-height: 1.35; }
+.status-line { line-height: 1.35; }
 
-.current-panel { display: grid; grid-template-columns: minmax(290px, .85fr) minmax(420px, 1.35fr); gap: 0; padding: 0; border: 1px solid #777; background: #fff; }
-.primary-reading { min-height: 235px; padding: 20px 24px 18px; border-right: 1px solid #777; display: flex; flex-direction: column; justify-content: space-between; }
-.register-label { display: flex; justify-content: space-between; gap: 16px; font-size: .6875rem; letter-spacing: .08em; color: var(--muted); }
-.register-label span:first-child { color: var(--ink); font-weight: 700; }
-.temperature-reading { margin: 4px 0 0; align-items: flex-start; }
-.temperature-reading > span:first-child { font-size: clamp(5.6rem, 9vw, 9rem); font-weight: 500; letter-spacing: -.075em; line-height: .85; }
-.large-unit { margin-left: 8px; padding-top: .2em; font-size: 1.3rem; }
-.reading-time { margin: 0; font-size: .6875rem; text-transform: uppercase; letter-spacing: .035em; }
-.measurement-matrix { display: grid; align-content: stretch; }
-.measurement-row { min-height: 39px; display: grid; grid-template-columns: 58px minmax(160px, 1fr) 92px 62px; align-items: center; border-bottom: 1px solid #c7c7c7; font-size: .75rem; }
-.measurement-row:last-child { border-bottom: 0; }
-.measurement-code { align-self: stretch; display: flex; align-items: center; padding: 0 10px; border-right: 1px solid #c7c7c7; color: var(--muted); font-size: .6875rem; letter-spacing: .05em; }
-.measurement-name { padding: 0 12px; color: var(--muted); }
-.measurement-value { padding: 0 10px; text-align: right; color: var(--ink); font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.measurement-unit { padding: 0 10px 0 0; color: var(--muted); text-align: right; font-size: .6875rem; }
+.primary-reading { flex-direction: column; justify-content: space-between; }
+.reading-time { margin: 0; }
+.measurement-matrix { align-content: stretch; }
+.measurement-row { font-size: .75rem; }
+.measurement-code { align-self: stretch; align-items: center; padding: 0 10px; border-right: 1px solid #c7c7c7; color: var(--muted); }
+.measurement-value { text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+.measurement-unit { color: var(--muted); text-align: right; }
 
-.weather-section, .calibration-section { margin-top: 38px; }
-.section-heading { margin-bottom: 12px; }
-.section-heading h2 { font-size: 1.65rem; }
-.chart-toolbar { padding: 7px 0 9px; gap: 4px 18px; }
-.series-options { gap: 0 14px; }
-.series-options label { min-height: 30px; font-size: .6875rem; text-transform: uppercase; letter-spacing: .025em; }
+.chart-toolbar { gap: 4px 18px; }
 .chart-guidance { font-size: .6875rem !important; letter-spacing: .03em; text-transform: uppercase; }
-.charts-grid { gap: 10px; }
-.chart-card { padding: 12px 12px 0; border-color: #777; }
-.chart-heading { margin-bottom: 5px; }
-.chart-heading h3 { font-size: .75rem; }
-.chart-unit { font-size: .6875rem; }
 
-.plot-navigation { margin: 8px 0 5px; gap: 6px; align-items: stretch; }
-.period-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(38px, auto); border: 1px solid #777; }
-.period-button { min-height: 31px; padding: 4px 8px; border: 0; border-right: 1px solid #b8b8b8; background: #fff; color: var(--ink); font: inherit; font-size: .6875rem; letter-spacing: .025em; cursor: pointer; }
+.plot-navigation { gap: 6px; }
+.period-strip { grid-auto-flow: column; grid-auto-columns: minmax(38px, auto); }
+.period-button { border: 0; font: inherit; letter-spacing: .025em; cursor: pointer; }
 .period-button:last-child { border-right: 0; }
 .period-button:hover { background: #ededed; }
-.period-button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-.plot-page-buttons { gap: 0; border: 1px solid #777; }
-.plot-page-buttons .button { min-height: 31px; border: 0; border-right: 1px solid #b8b8b8; padding: 3px 8px; }
+.plot-page-buttons .button { border: 0; }
 .plot-page-buttons .button:last-child { border-right: 0; }
-.plot-arrow { min-width: 32px; font-size: .875rem; }
-.plot-latest { min-width: 44px; }
-.plot-window { min-height: 1.25em; margin-bottom: 2px; font-size: .6875rem; }
-.plot-coverage { min-height: 2.5em; margin-bottom: 5px; font-size: .6875rem !important; line-height: 1.35; }
-.chart { height: 285px; border-color: #aaa; }
-.chart-readout { min-height: 58px; margin-top: 4px; padding: 7px 0 8px; font-size: .6875rem; line-height: 1.45; }
-.chart-footnotes { margin-top: 8px; font-size: .6875rem; }
+.plot-coverage { line-height: 1.35; }
 
-.performance-grid { border-color: #777; }
-.performance-metric { padding-top: 15px; padding-bottom: 15px; }
-.performance-metric h3 { margin-bottom: 8px; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
-.performance-value { font-size: 2.15rem; }
-.performance-metric p { margin-top: 7px; font-size: .6875rem; }
-.model-details { margin-top: 15px; background: #fff; border-color: #777; }
-.model-details summary { padding: 12px 14px; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
-.details-content { padding: 0 14px 14px; }
-.coefficients-grid { padding: 14px 0; gap: 10px; }
-.coefficients-grid dt { font-size: .6875rem; }
+.performance-metric p { margin-top: 7px; }
+.coefficients-grid { gap: 10px; }
 .coefficients-grid dd { font-size: 1rem; }
 .coefficient-chart { height: 265px; }
-.section-intro { margin: -2px 0 12px; font-size: .75rem; }
+.section-intro { font-size: .75rem; }
 .calibration-note, #coefficientDescription { font-size: .6875rem; }
-.site-footer { margin-top: 38px; padding: 16px 0 24px; }
-.footer-wordmark { font-size: 1.45rem; }
-.site-footer p, .footer-detail { font-size: .6875rem; }
 
 @media (max-width: 780px) {
-  .current-panel { grid-template-columns: 1fr; }
-  .primary-reading { min-height: 205px; border-right: 0; border-bottom: 1px solid #777; }
-  .temperature-reading > span:first-child { font-size: clamp(5.2rem, 20vw, 8rem); }
-  .measurement-row { grid-template-columns: 52px minmax(120px, 1fr) 76px 58px; }
   .period-strip { width: 100%; grid-template-columns: repeat(6, 1fr); grid-auto-flow: row; }
   .plot-navigation { flex-direction: column; }
   .plot-page-buttons { align-self: flex-start; }
 }
 @media (max-width: 540px) {
-  .masthead { padding-top: 20px; }
-  .masthead-meta { grid-template-columns: 1fr; }
   .masthead-meta .muted { text-align: left; }
-  .technical-meta { grid-column: 1 / -1; }
-  .measurement-row { grid-template-columns: 48px minmax(105px, 1fr) 68px 50px; font-size: .6875rem; }
+  .measurement-row { font-size: .6875rem; }
   .measurement-name { padding-inline: 8px; }
-  .measurement-value { font-size: .95rem; padding-inline: 6px; }
-  .measurement-unit { padding-right: 6px; font-size: .625rem; }
-  .period-button { padding-inline: 5px; font-size: .625rem; }
+  .measurement-value { padding-inline: 6px; }
+  .period-button { padding-inline: 5px; }
   .chart-card { padding-inline: 8px; }
 }
 
-
 /* Quieter refinement: preserve the technical character with less visual noise. */
-:root {
-  --page: #ececea;
-  --muted: #666663;
-  --line: #cececa;
-  --panel: #ffffff;
-}
 
-.technical-meta { display: none; }
-.overview-heading .eyebrow { display: none; }
-.chart-guidance { display: none; }
-
-.masthead { padding-top: 26px; padding-bottom: 20px; border-bottom-color: #a8a8a4; }
-.wordmark { font-size: clamp(3.8rem, 6.8vw, 6.2rem); }
-.navigation { border-bottom-color: #d1d1cd; }
-.nav-links { text-transform: none; letter-spacing: 0; }
-
-.status-badge { font-weight: 600; letter-spacing: .03em; }
+.status-badge { font-weight: 600; }
 .status-badge::before { font-size: .7em; margin-right: 6px; }
 .status-line { color: #777773; }
 
-.current-panel { border-color: #bdbdb9; }
-.primary-reading { border-right-color: #d4d4d0; }
-.register-label { letter-spacing: .04em; }
-.register-label span:last-child { display: none; }
-.measurement-row {
-  grid-template-columns: minmax(165px, 1fr) 92px 62px;
-  border-bottom-color: #e0e0dc;
-  min-height: 42px;
-}
-.measurement-code { display: none; }
-.measurement-name { padding-left: 16px; }
-.measurement-value { font-weight: 600; }
-
 .weather-section, .calibration-section { margin-top: 44px; }
-.section-heading h2 { font-size: 1.55rem; }
-.charts-grid { gap: 14px; }
-.chart-card {
-  border-color: #d0d0cc;
-  padding: 14px 14px 0;
-}
-.chart-heading h3 { letter-spacing: .025em; text-transform: none; }
-.chart { border-color: #ddddda; }
-.period-strip { border-color: #c8c8c4; }
-.period-button {
-  border-right-color: #ddddda;
-  color: #5e5e5b;
-}
 .period-button:hover { background: #f2f2ef; }
-.period-button[aria-pressed="true"] { background: #222; color: #fff; }
-.plot-page-buttons { border-color: #c8c8c4; }
-.plot-page-buttons .button { border-right-color: #ddddda; }
 .plot-window, .plot-coverage, .chart-readout { color: #70706d; }
 
-.series-options { gap: 0 18px; }
 .series-options label {
   text-transform: none;
   letter-spacing: 0;
-  font-size: .75rem;
 }
-.series-options input { width: 14px; height: 14px; }
-.legend-line { width: 17px; }
-.legend-band { width: 17px; background: #e6e6e3; border-color: #cdcdc9; }
+.legend-band { background: #e6e6e3; border-color: #cdcdc9; }
 
 .mode-badge {
   border: 0;
@@ -453,19 +214,6 @@ select { padding: 10px 32px 10px 11px; min-height: 44px; max-width: 100%; backgr
   color: var(--muted);
   font-size: .75rem;
 }
-.performance-grid { border-color: #c9c9c5; }
-.performance-metric + .performance-metric { border-left-color: #ddddda; }
-.model-details { border-color: #c9c9c5; background: #fff; }
-.coefficient-chart { border-color: #ddddda; }
-
-@media (max-width: 780px) {
-  .primary-reading { border-right: 0; border-bottom-color: #d4d4d0; }
-  .measurement-row { grid-template-columns: minmax(135px, 1fr) 76px 58px; }
-}
-@media (max-width: 540px) {
-  .measurement-row { grid-template-columns: minmax(118px, 1fr) 68px 50px; }
-}
-
 
 /* Editorial meteorological system — asymmetrical, typographic, and deliberately sparse. */
 :root {
@@ -481,113 +229,44 @@ body { background: var(--page); }
 .site-shell { max-width: 1500px; padding-inline: clamp(18px, 4vw, 58px); }
 
 /* Masthead: large display type against compact technical metadata. */
-.masthead {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  padding: 26px 0 18px;
-  border-bottom: 2px solid var(--ink);
-}
 .wordmark {
   font-family: var(--font-display);
-  font-size: clamp(5.8rem, 13vw, 12rem);
   font-weight: 700;
-  line-height: .72;
-  letter-spacing: -.09em;
   text-transform: none;
 }
 .masthead-meta {
-  align-self: end;
-  min-width: 210px;
-  padding-bottom: 2px;
-  font-size: .6875rem;
   line-height: 1.35;
 }
-.masthead-meta .eyebrow { display: block; }
 .technical-meta { display: none; }
 
-.navigation {
-  min-height: 42px;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--ink);
-}
-.nav-links { gap: 22px; }
-.nav-links a {
-  min-height: 36px;
-  font-size: .75rem;
-  text-decoration: none;
-}
 .nav-links a:hover { text-decoration: underline; }
 .refresh-button {
-  min-height: 32px;
-  padding: 0;
   border: 0;
   background: transparent;
 }
-.refresh-button svg { display: none; }
 .refresh-button:hover { background: transparent; color: var(--ink); text-decoration: underline; }
 
 /* Numbered editorial sections. */
 .observations, .weather-section, .calibration-section {
   position: relative;
-  padding-top: 54px;
 }
 .observations::before, .weather-section::before, .calibration-section::before {
   position: absolute;
-  top: 48px;
   left: 0;
   font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -.04em;
 }
-.observations::before { content: "01"; }
-.weather-section::before { content: "02"; }
-.calibration-section::before { content: "03"; }
-
-.section-heading {
-  padding-left: 52px;
-  margin-bottom: 15px;
-}
-.section-heading .eyebrow {
-  margin-bottom: 2px;
-  font-size: .625rem;
-  letter-spacing: .08em;
-}
-.section-heading h1,
-.section-heading h2 {
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 4.2vw, 4.2rem);
-  font-weight: 700;
-  line-height: .95;
-  letter-spacing: -.055em;
-}
-.overview-heading h1 {
-  font-size: clamp(2.1rem, 4.2vw, 4.2rem);
-  text-transform: none;
-  letter-spacing: -.055em;
-}
-.overview-heading .eyebrow { display: block; }
 
 .status-badge {
   align-self: end;
   margin-bottom: 3px;
-  font-size: .6875rem;
   letter-spacing: 0;
 }
 .status-line {
-  margin: 0 0 18px 52px;
   max-width: 72ch;
-  font-size: .6875rem;
 }
 
 /* Current data: composition rather than dashboard card. */
 .current-panel {
-  display: grid;
-  grid-template-columns: minmax(280px, .9fr) minmax(420px, 1.3fr);
-  gap: clamp(24px, 5vw, 80px);
-  align-items: end;
-  padding: 18px 0 6px 52px;
   border: 0;
   background: transparent;
 }
@@ -596,115 +275,55 @@ body { background: var(--page); }
   padding: 0;
   border: 0;
 }
-.register-label {
-  justify-content: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-size: .625rem;
-  color: var(--muted);
-}
-.register-label span:first-child { font-weight: 400; color: var(--muted); }
-.temperature-reading {
-  margin: 0;
-  align-items: flex-start;
-}
 .temperature-reading > span:first-child {
   font-family: var(--font-display);
-  font-size: clamp(8rem, 17vw, 15rem);
   font-weight: 700;
-  line-height: .7;
-  letter-spacing: -.09em;
-}
-.large-unit {
-  padding-top: .55em;
-  margin-left: 10px;
-  font-size: 1rem;
 }
 .reading-time {
   margin-top: 22px;
-  font-size: .625rem;
   text-transform: none;
   letter-spacing: 0;
 }
 
 .measurement-matrix {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 28px;
   align-self: stretch;
-  border-top: 2px solid var(--ink);
 }
 .measurement-row {
-  min-height: 76px;
-  display: grid;
-  grid-template-columns: minmax(120px, 1fr) auto auto;
   align-items: end;
-  padding: 11px 0 10px;
-  border-bottom: 1px solid var(--line);
 }
 .measurement-code { display: none; }
 .measurement-name {
-  align-self: start;
   padding: 0 14px 0 0;
-  font-size: .6875rem;
-  line-height: 1.25;
-  color: var(--muted);
 }
 .measurement-value {
   padding: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.2rem, 3.8vw, 4rem);
   font-weight: 700;
-  line-height: .8;
   letter-spacing: -.055em;
 }
 .measurement-unit {
-  min-width: 48px;
   padding: 0 0 2px 8px;
-  font-size: .625rem;
 }
 
 /* Chart controls become typography rather than button chrome. */
 .chart-toolbar {
-  margin-left: 52px;
-  padding: 2px 0 14px;
   border-top: 0;
-}
-.series-options {
-  gap: 8px 20px;
-}
-.series-options label {
-  min-height: 28px;
-  font-size: .6875rem;
-}
-.series-options input {
-  width: 13px;
-  height: 13px;
 }
 .legend-line, .legend-band { width: 15px; }
 .chart-guidance { display: none; }
 
-.charts-grid {
-  grid-template-columns: 1fr 1fr;
-  gap: 36px 26px;
-  margin-left: 52px;
-}
 .chart-card {
   padding: 0;
   border: 0;
   background: transparent;
 }
 .chart-heading {
-  min-height: 34px;
   margin: 0;
-  padding: 0 0 7px;
-  border-bottom: 2px solid var(--ink);
 }
 .chart-heading h3 {
   font-family: var(--font-display);
-  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: -.035em;
   text-transform: none;
 }
 .chart-unit { font-size: .625rem; }
@@ -716,16 +335,13 @@ body { background: var(--page); }
 .period-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
   border: 0;
 }
 .period-button {
-  min-height: 25px;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: .6875rem;
 }
 .period-button:hover {
   background: transparent;
@@ -737,14 +353,12 @@ body { background: var(--page); }
   color: var(--ink);
   text-decoration: underline;
   text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
 }
 .plot-page-buttons {
   gap: 8px;
   border: 0;
 }
 .plot-page-buttons .button {
-  min-height: 25px;
   min-width: 0;
   padding: 0;
   border: 0;
@@ -757,8 +371,6 @@ body { background: var(--page); }
 }
 .plot-window {
   margin: 1px 0 0;
-  min-height: 1.2em;
-  font-size: .625rem;
 }
 .plot-coverage {
   min-height: 2.2em;
@@ -766,12 +378,9 @@ body { background: var(--page); }
   font-size: .625rem !important;
 }
 .chart {
-  height: 300px;
   border: 0;
-  background: #fff;
 }
 .chart-readout {
-  min-height: 46px;
   margin: 0;
   padding: 7px 0 0;
   border-top: 0;
@@ -785,48 +394,25 @@ body { background: var(--page); }
 /* Calibration follows the same editorial rhythm. */
 .calibration-section { border-top: 0; }
 .section-intro { margin: 0 0 20px 52px; max-width: 76ch; }
-.performance-grid {
-  margin-left: 52px;
-  display: grid;
-  grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
-  border-top: 2px solid var(--ink);
-  border-bottom: 0;
-}
-.performance-metric,
-.performance-metric + .performance-metric {
-  padding: 12px 18px 18px 0;
-  border-left: 0;
-  border-bottom: 1px solid var(--line);
-}
-.performance-metric + .performance-metric { padding-left: 0; }
 .performance-metric h3 {
   min-height: 0;
-  margin-bottom: 12px;
-  font-size: .6875rem;
   text-transform: none;
   letter-spacing: 0;
 }
 .performance-value {
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 4vw, 4.5rem);
   font-weight: 700;
   letter-spacing: -.06em;
 }
 .performance-metric p { font-size: .625rem; }
 
 .model-details {
-  margin: 28px 0 0 52px;
   border: 0;
-  border-top: 2px solid var(--ink);
   background: transparent;
 }
 .model-details summary {
-  padding: 9px 0;
-  font-size: .6875rem;
   text-transform: none;
-  letter-spacing: 0;
 }
-.model-details[open] summary { border-bottom: 1px solid var(--line); }
 .details-content { padding: 0; }
 .coefficients-grid {
   grid-template-columns: repeat(5, 1fr);
@@ -840,50 +426,18 @@ body { background: var(--page); }
 .mode-badge { align-self: end; margin-bottom: 5px; }
 
 .site-footer {
-  margin-top: 58px;
   padding: 14px 0 26px;
-  border-top: 2px solid var(--ink);
-}
-.footer-wordmark {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -.06em;
-}
-
-@media (max-width: 900px) {
-  .current-panel {
-    grid-template-columns: 1fr;
-    gap: 34px;
-  }
-  .measurement-matrix { grid-template-columns: 1fr 1fr; }
-  .charts-grid { grid-template-columns: 1fr; }
-  .performance-grid { grid-template-columns: 1fr 1fr; }
-  .performance-metric:nth-child(3) { border-top: 0; }
 }
 
 @media (max-width: 620px) {
-  .masthead { grid-template-columns: 1fr; gap: 22px; }
-  .masthead-meta { text-align: left; min-width: 0; }
-  .observations::before, .weather-section::before, .calibration-section::before { top: 42px; }
   .section-heading, .status-line, .current-panel, .chart-toolbar, .charts-grid, .chart-footnotes, .section-intro, .performance-grid, .model-details { margin-left: 0; padding-left: 0; }
-  .section-heading { padding-left: 36px; }
-  .status-line { margin-left: 36px; }
-  .current-panel { padding-left: 0; }
-  .temperature-reading > span:first-child { font-size: clamp(7rem, 32vw, 11rem); }
-  .measurement-matrix { grid-template-columns: 1fr; }
-  .measurement-row { min-height: 64px; }
-  .charts-grid { gap: 30px; }
-  .performance-grid { grid-template-columns: 1fr 1fr; }
   .coefficients-grid { grid-template-columns: 1fr 1fr; }
 }
-
 
 /* Keep charts visually self-explanatory: suppress explanatory copy unless action is needed. */
 .chart-footnotes { display: none; }
 .plot-coverage:not([data-state="limited"]):not([data-state="error"]) { display: none; }
 .chart-readout:empty { display: none; }
-
 
 /* Minimal-copy pass. */
 .status-line:empty,
@@ -895,49 +449,23 @@ body { background: var(--page); }
 .section-intro { margin-bottom: 10px; }
 .plot-window { color: var(--muted); }
 
-
 /* Remove section menu; keep refresh as quiet masthead utility. */
 .masthead-meta .refresh-button {
   justify-self: end;
-  margin-top: 6px;
   font-size: .6875rem;
 }
-@media (max-width: 620px) {
-  .masthead-meta .refresh-button { justify-self: start; }
-}
-
 
 /* Editorial asymmetry pass — stronger scale contrast, fewer rules, less dashboard symmetry. */
-.masthead {
-  padding-top: 10px;
-  padding-bottom: 14px;
-  border-bottom-width: 4px;
-  overflow: hidden;
-}
-.wordmark {
-  margin-left: -.055em;
-  margin-top: -.08em;
-  font-size: clamp(7.5rem, 16vw, 15rem);
-  line-height: .68;
-  letter-spacing: -.105em;
-}
 .masthead-meta {
-  padding-bottom: 6px;
   font-size: .625rem;
 }
 .masthead-meta .eyebrow { display: none; }
 .masthead-meta .refresh-button {
-  margin-top: 4px;
   text-transform: none;
   letter-spacing: 0;
 }
 
-/* Remove explanatory micro-headings; section names and numbers do the work. */
-.section-heading .eyebrow { display: none !important; }
-.register-label span:last-child { display: none; }
-
 /* Section numbers become graphic objects rather than navigation markers. */
-.observations, .weather-section, .calibration-section { padding-top: 76px; }
 .observations::before, .weather-section::before, .calibration-section::before {
   top: 50px;
   font-size: clamp(4.5rem, 8vw, 7.5rem);
@@ -945,67 +473,21 @@ body { background: var(--page); }
   letter-spacing: -.09em;
   font-weight: 700;
 }
-.section-heading {
-  padding-left: clamp(76px, 9vw, 126px);
-  margin-bottom: 18px;
-}
-.section-heading h1,
-.section-heading h2,
-.overview-heading h1 {
-  font-size: clamp(2.8rem, 5.5vw, 5.5rem);
-  line-height: .86;
-}
-.status-line {
-  margin-left: clamp(76px, 9vw, 126px);
-}
 
 /* One deliberately odd typographic gesture: the main °C unit runs vertically. */
 .large-unit {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  margin-left: 8px;
   padding-top: 0;
-  font-size: .8rem;
   letter-spacing: .08em;
   align-self: flex-start;
 }
 
 /* Fewer internal rules; larger differences in scale do the separating. */
-.measurement-matrix {
-  border-top-width: 3px;
-  gap: 6px 34px;
-}
-.measurement-row {
-  min-height: 70px;
-  border-bottom: 0;
-  padding: 9px 0;
-}
-.measurement-name { font-size: .625rem; }
 .measurement-value {
-  font-size: clamp(2.7rem, 4.4vw, 4.8rem);
   line-height: .74;
 }
 
 /* Break the dashboard grid. */
-.charts-grid {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 48px 24px;
-  align-items: start;
-}
-.chart-card:nth-child(1) { grid-column: 1 / -1; }
-.chart-card:nth-child(2) { grid-column: 1 / span 7; }
-.chart-card:nth-child(3) { grid-column: 8 / -1; }
-.chart-card:nth-child(4) { grid-column: 3 / span 8; }
 
-.chart-card:nth-child(1) .chart { height: 390px; }
-.chart-card:nth-child(2) .chart,
-.chart-card:nth-child(3) .chart { height: 285px; }
-.chart-card:nth-child(4) .chart { height: 260px; }
-
-.chart-heading {
-  min-height: 38px;
-  border-bottom-width: 3px;
-}
 .chart-heading h3 {
   font-size: clamp(1.4rem, 2vw, 2.1rem);
   line-height: .9;
@@ -1016,7 +498,6 @@ body { background: var(--page); }
 }
 
 /* Controls should feel typeset, not widget-like. */
-.period-strip { gap: 12px; }
 .period-button,
 .plot-page-buttons .button {
   font-size: .625rem;
@@ -1031,79 +512,28 @@ body { background: var(--page); }
 }
 
 /* Calibration: let the four figures lead; everything else is secondary. */
-.calibration-section .section-intro,
-.calibration-section .mode-badge { display: none !important; }
-.performance-grid {
-  border-top-width: 3px;
-  gap: 0 22px;
-}
-.performance-metric,
-.performance-metric + .performance-metric {
-  border-bottom: 0;
-  padding-top: 14px;
-  padding-bottom: 8px;
-}
-.performance-metric h3 {
-  font-size: .625rem;
-  margin-bottom: 10px;
-}
 .performance-value {
   font-size: clamp(3.2rem, 5.8vw, 6rem);
   line-height: .78;
 }
-.model-details {
-  margin-top: 36px;
-  border-top-width: 3px;
-}
 .model-details summary {
   width: fit-content;
   padding: 8px 0;
-  font-size: .625rem;
   letter-spacing: .04em;
 }
 .model-details[open] summary { border-bottom: 0; }
 .summary-symbol { display: none; }
 
 /* Match the stronger editorial rules elsewhere. */
-.site-footer { border-top-width: 3px; }
-
-@media (max-width: 900px) {
-  .charts-grid { grid-template-columns: 1fr; }
-  .chart-card:nth-child(1),
-  .chart-card:nth-child(2),
-  .chart-card:nth-child(3),
-  .chart-card:nth-child(4) { grid-column: 1; }
-  .chart-card:nth-child(1) .chart { height: 330px; }
-  .chart-card:nth-child(2) .chart,
-  .chart-card:nth-child(3) .chart,
-  .chart-card:nth-child(4) .chart { height: 275px; }
-}
 
 @media (max-width: 620px) {
-  .masthead { overflow: visible; padding-top: 18px; }
-  .wordmark {
-    font-size: clamp(6rem, 28vw, 9rem);
-    margin-left: -.04em;
-  }
-  .observations, .weather-section, .calibration-section { padding-top: 58px; }
   .observations::before, .weather-section::before, .calibration-section::before {
     top: 42px;
     font-size: 3.8rem;
   }
-  .section-heading { padding-left: 54px; }
-  .status-line { margin-left: 54px; }
-  .charts-grid { margin-left: 0; }
-  .chart-toolbar { margin-left: 0; }
-  .performance-grid,
-  .model-details { margin-left: 0; }
 }
-
 
 /* Editorial push II — simplify naming, exaggerate offsets, break remaining symmetry. */
-.masthead-meta {
-  justify-items: end;
-  text-align: right;
-}
 .station-name {
   font-family: var(--font-display);
   font-size: 1rem;
@@ -1116,143 +546,45 @@ body { background: var(--page); }
 }
 
 /* Slightly different heading offsets per section create a poster-like rhythm. */
-.weather-section .section-heading {
-  padding-left: clamp(110px, 15vw, 220px);
-}
-.calibration-section .section-heading {
-  padding-left: clamp(64px, 7vw, 96px);
-}
 .weather-section::before { left: clamp(0px, 2vw, 28px); }
 .calibration-section::before { left: clamp(18px, 4vw, 54px); }
 
-/* Current readings: deliberately uneven sizes. */
-.measurement-row:nth-child(2) .measurement-value {
-  font-size: clamp(3.4rem, 5.5vw, 5.9rem);
-}
-.measurement-row:nth-child(3) .measurement-value,
-.measurement-row:nth-child(5) .measurement-value {
-  font-size: clamp(2.1rem, 3.2vw, 3.4rem);
-}
-.measurement-row:nth-child(6) {
-  transform: translateX(clamp(0px, 2vw, 26px));
-}
-
 /* Vary heading alignment between charts instead of repeating one component four times. */
 .chart-card:nth-child(2) .chart-heading {
-  justify-content: flex-start;
   gap: 12px;
 }
 .chart-card:nth-child(3) .chart-heading {
-  flex-direction: row-reverse;
-  justify-content: flex-start;
   gap: 12px;
-}
-.chart-card:nth-child(3) .chart-heading h3 { text-align: right; }
-.chart-card:nth-child(4) .chart-heading {
-  padding-left: clamp(0px, 3vw, 40px);
 }
 
 /* Calibration behaves like four pieces of type, not four cards. */
-.performance-grid {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0 16px;
-}
 .performance-metric:nth-child(1) { grid-column: 1 / span 2; }
 .performance-metric:nth-child(2) { grid-column: 3 / span 3; }
 .performance-metric:nth-child(3) { grid-column: 6 / span 3; }
 .performance-metric:nth-child(4) { grid-column: 9 / -1; }
-.performance-metric:nth-child(4) .performance-value {
-  font-size: clamp(4rem, 7vw, 7.2rem);
-}
-.model-details {
-  width: min(72%, 920px);
-  margin-left: auto;
-}
 
 /* Footer becomes a tiny folio line; no repeated cligMET wordmark. */
 .site-footer {
-  display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 20px;
   font-size: .625rem;
 }
-.site-footer .footer-wordmark { display: none; }
 
 @media (max-width: 900px) {
-  .masthead-meta { justify-items: start; text-align: left; }
-  .weather-section .section-heading,
-  .calibration-section .section-heading { padding-left: 72px; }
   .weather-section::before,
   .calibration-section::before { left: 0; }
-  .performance-grid { grid-template-columns: 1fr 1fr; }
   .performance-metric:nth-child(1),
   .performance-metric:nth-child(2),
   .performance-metric:nth-child(3),
   .performance-metric:nth-child(4) { grid-column: auto; }
-  .model-details { width: 100%; }
-  .measurement-row:nth-child(6) { transform: none; }
 }
-
-@media (max-width: 620px) {
-  .weather-section .section-heading,
-  .calibration-section .section-heading { padding-left: 54px; }
-  .performance-grid { grid-template-columns: 1fr 1fr; }
-}
-
-
-/* Editorial push III — less interface, more composition. */
 
 /* Let the live readings behave like a field of type rather than a matrix. */
-.current-panel {
-  grid-template-columns: minmax(260px, .78fr) minmax(500px, 1.42fr);
-  gap: clamp(36px, 6vw, 94px);
-  align-items: start;
-}
 .primary-reading {
-  position: sticky;
   top: 18px;
-}
-.measurement-matrix {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 30px 18px;
-  border-top: 0;
-  align-items: end;
 }
 .measurement-row {
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(70px, 1fr) auto auto;
-  padding: 0;
-  border: 0;
-  transform: none !important;
-}
-.measurement-row:nth-child(1) { grid-column: 1 / span 4; }
-.measurement-row:nth-child(2) {
-  grid-column: 5 / -1;
-  padding-top: 12px;
-  border-top: 4px solid var(--ink);
-}
-.measurement-row:nth-child(3) { grid-column: 1 / span 3; }
-.measurement-row:nth-child(4) { grid-column: 4 / span 4; }
-.measurement-row:nth-child(5) { grid-column: 9 / -1; }
-.measurement-row:nth-child(6) {
-  grid-column: 3 / span 7;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 2px solid var(--ink);
-}
-.measurement-row:nth-child(2) .measurement-value {
-  font-size: clamp(4.8rem, 7.7vw, 8.2rem);
-}
-.measurement-row:nth-child(1) .measurement-value,
-.measurement-row:nth-child(4) .measurement-value,
-.measurement-row:nth-child(6) .measurement-value {
-  font-size: clamp(2.9rem, 4.4vw, 4.8rem);
-}
-.measurement-row:nth-child(3) .measurement-value,
-.measurement-row:nth-child(5) .measurement-value {
-  font-size: clamp(1.8rem, 2.7vw, 3rem);
 }
 .measurement-name {
   padding-right: 10px;
@@ -1267,18 +599,14 @@ body { background: var(--page); }
 .weather-section::before {
   color: transparent;
   -webkit-text-stroke: 1.5px var(--ink);
-  text-stroke: 1.5px var(--ink);
 }
 
 /* Series selection becomes a typographic legend, not checkbox UI. */
 .chart-toolbar {
   justify-content: flex-end;
-  padding-top: 0;
-  padding-bottom: 18px;
 }
 .series-options {
   margin-left: auto;
-  gap: 12px 22px;
 }
 .series-options input {
   position: absolute;
@@ -1289,10 +617,8 @@ body { background: var(--page); }
 }
 .series-options label {
   position: relative;
-  min-height: 20px;
   gap: 7px;
   padding: 0 0 3px;
-  color: #969690;
   cursor: pointer;
 }
 .series-options label:has(input:checked) {
@@ -1311,141 +637,20 @@ body { background: var(--page); }
 /* The main plot gets publication-scale titling. */
 .chart-card:nth-child(1) .chart-heading {
   min-height: auto;
-  padding-bottom: 10px;
-  border-bottom-width: 5px;
 }
-.chart-card:nth-child(1) .chart-heading h3 {
-  font-size: clamp(3.1rem, 5.8vw, 6rem);
-  line-height: .75;
-  letter-spacing: -.075em;
-}
-.chart-card:nth-child(1) .chart-unit {
-  font-size: .6875rem;
-  padding-bottom: 0;
-}
-.chart-card:nth-child(2) .chart-heading { border-bottom-width: 2px; }
-.chart-card:nth-child(3) .chart-heading { border-bottom: 0; }
-.chart-card:nth-child(4) .chart-heading { border-bottom-width: 4px; }
-
-.chart-card:nth-child(1) .chart { background: #fff; }
-.chart-card:nth-child(2) .chart,
-.chart-card:nth-child(3) .chart,
-.chart-card:nth-child(4) .chart { background: transparent; }
-
-/* Let secondary plots sit at different vertical rhythms. */
-.chart-card:nth-child(2) { margin-top: 8px; }
-.chart-card:nth-child(3) { margin-top: 82px; }
-.chart-card:nth-child(4) { margin-top: -12px; }
 
 /* Calibration becomes four independent typographic objects. */
-.performance-grid {
-  border-top: 0;
-  align-items: start;
-}
-.performance-metric,
-.performance-metric + .performance-metric {
-  border-top: 2px solid var(--ink);
-  padding-top: 10px;
-}
-.performance-metric:nth-child(1) {
-  margin-top: 42px;
-  border-top-width: 1px;
-}
-.performance-metric:nth-child(2) { border-top-width: 4px; }
-.performance-metric:nth-child(3) {
-  margin-top: 78px;
-  border-top-width: 1px;
-}
-.performance-metric:nth-child(4) {
-  margin-top: 18px;
-  border-top-width: 5px;
-}
 .performance-metric:nth-child(1) .performance-value {
   font-size: clamp(2.8rem, 4.4vw, 4.7rem);
-}
-.model-details {
-  width: min(62%, 820px);
-  margin-top: 86px;
 }
 
 /* The footer is just folio information. */
 .site-footer {
-  margin-top: 86px;
   border-top: 1px solid #9e9e98;
-  padding-top: 9px;
   padding-bottom: 18px;
 }
 
-@media (max-width: 1050px) {
-  .current-panel {
-    grid-template-columns: 1fr;
-    gap: 42px;
-  }
-  .primary-reading {
-    position: static;
-    max-width: 620px;
-  }
-  .measurement-matrix {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .measurement-matrix {
-    grid-template-columns: 1fr 1fr;
-    gap: 24px 28px;
-  }
-  .measurement-row:nth-child(1),
-  .measurement-row:nth-child(2),
-  .measurement-row:nth-child(3),
-  .measurement-row:nth-child(4),
-  .measurement-row:nth-child(5),
-  .measurement-row:nth-child(6) {
-    grid-column: auto;
-    margin-top: 0;
-  }
-  .measurement-row:nth-child(2),
-  .measurement-row:nth-child(6) {
-    padding-top: 10px;
-  }
-  .chart-card:nth-child(2),
-  .chart-card:nth-child(3),
-  .chart-card:nth-child(4) {
-    margin-top: 0;
-  }
-  .performance-metric:nth-child(1),
-  .performance-metric:nth-child(2),
-  .performance-metric:nth-child(3),
-  .performance-metric:nth-child(4) {
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 620px) {
-  .measurement-matrix {
-    grid-template-columns: 1fr;
-  }
-  .measurement-row:nth-child(2) .measurement-value {
-    font-size: clamp(4rem, 18vw, 6rem);
-  }
-  .chart-card:nth-child(1) .chart-heading h3 {
-    font-size: clamp(2.8rem, 14vw, 4.8rem);
-  }
-  .model-details { width: 100%; margin-top: 54px; }
-}
-
-
 /* Editorial push IIIb — reduce utility language to marks and IDs. */
-.register-label { display: none !important; }
-
-.overview-heading {
-  justify-content: flex-start;
-  gap: 18px;
-}
-.overview-heading .status-badge {
-  align-self: flex-end;
-  margin-bottom: .35em;
-}
 
 .masthead-meta .refresh-button {
   position: relative;
@@ -1481,172 +686,35 @@ body { background: var(--page); }
   text-decoration: none;
 }
 
-
-/* Poster-system leap — one continuous meteorological sheet. */
-
 /* 01: live temperature becomes part of the masthead composition. */
 .masthead {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .72fr) minmax(145px, .28fr);
-  gap: clamp(22px, 4vw, 62px);
-  align-items: end;
-  min-height: min(42vw, 470px);
-  padding: 0 0 18px;
-  border-bottom: 0;
-  overflow: visible;
 }
 .wordmark {
-  align-self: start;
-  margin-top: -.055em;
-  margin-left: -.075em;
-  font-size: clamp(9rem, 18vw, 17rem);
-  line-height: .64;
-  letter-spacing: -.115em;
   white-space: nowrap;
 }
-.masthead-live {
-  position: relative;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-width: 0;
-  padding: 18px 0 0;
-  border-top: 5px solid var(--ink);
-}
-.masthead-live-kicker {
-  position: absolute;
-  top: 7px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  font-size: .575rem;
-  letter-spacing: .07em;
-}
-.masthead-live-kicker span:first-child {
-  font-family: var(--font-display);
-  font-size: clamp(2.7rem, 4.8vw, 5rem);
-  line-height: .72;
-  letter-spacing: -.08em;
-}
-.masthead-temperature {
-  margin: auto 0 0;
-  align-items: flex-start;
-}
-.masthead-temperature > span:first-child {
-  font-size: clamp(8.5rem, 14vw, 14rem);
-  line-height: .67;
-  letter-spacing: -.105em;
-}
-.masthead-temperature .large-unit {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  margin: 3px 0 0 8px;
-  font-size: .72rem;
-}
-.masthead-live-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  margin-top: 18px;
-  padding-top: 7px;
-  border-top: 1px solid var(--ink);
-}
-.masthead-live .reading-time {
-  margin: 0;
-  font-size: .6rem;
-}
-.masthead-live .status-badge {
-  margin: 0;
-  font-size: .6rem;
-}
-.masthead-live .status-line {
-  margin: 5px 0 0;
-  min-height: 0;
-  font-size: .575rem;
-}
 .masthead-meta {
-  align-self: end;
   padding: 0 0 2px;
-  border-top: 1px solid var(--ink);
-  padding-top: 7px;
 }
 
 /* Current-condition field flows directly out of the masthead. */
-.observations {
-  padding-top: 30px;
-}
 .observations::before,
 .weather-section::before,
 .calibration-section::before {
   content: none !important;
 }
-.current-panel {
-  display: block;
-  padding: 0;
-}
-.primary-reading { display: none; }
-.measurement-matrix {
-  width: min(88%, 1180px);
-  margin-left: auto;
-  padding-left: clamp(0px, 4vw, 60px);
-}
 
 /* Explicit registration marks replace section headings. */
-.section-register {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  width: 100%;
-  margin-bottom: 18px;
-  padding-bottom: 7px;
-  border-bottom: 4px solid var(--ink);
-}
-.section-number {
-  font-family: var(--font-display);
-  font-size: clamp(5rem, 9vw, 9rem);
-  font-weight: 700;
-  line-height: .67;
-  letter-spacing: -.1em;
-}
 .weather-section .section-number {
-  color: transparent;
   -webkit-text-stroke: 1.5px var(--ink);
-}
-.section-ref {
-  padding-bottom: 3px;
-  font-size: .575rem;
-  letter-spacing: .08em;
 }
 
 /* 02: Temperature is a publishing plate rather than another card. */
-.weather-section {
-  padding-top: 104px;
-}
-.chart-toolbar {
-  margin: 0 0 20px;
-  padding: 0;
-}
-.charts-grid {
-  margin-left: 0;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 64px 24px;
-}
 .chart-card:nth-child(1) {
-  grid-column: 1 / -1;
   position: relative;
   margin-inline: calc(clamp(18px, 4vw, 58px) * -1);
-  padding: 26px clamp(18px, 4vw, 58px) 18px;
-  background: #fff;
 }
 .chart-card:nth-child(1)::before {
-  content: "CLG/03.1/A";
   position: absolute;
   top: 9px;
   right: clamp(18px, 4vw, 58px);
@@ -1654,16 +722,7 @@ body { background: var(--page); }
   letter-spacing: .08em;
   color: var(--muted);
 }
-.chart-card:nth-child(1) .chart-heading {
-  border-bottom: 0;
-  padding: 0;
-  margin: 0 0 -8px;
-}
 .chart-card:nth-child(1) .chart-heading h3 {
-  font-size: clamp(4.6rem, 9vw, 9rem);
-  line-height: .66;
-  letter-spacing: -.095em;
-  transform: translateY(20px);
   position: relative;
   z-index: 2;
 }
@@ -1674,139 +733,55 @@ body { background: var(--page); }
 .chart-card:nth-child(1) .plot-navigation {
   position: relative;
   z-index: 3;
-  justify-content: flex-end;
   margin: 18px 0 3px;
 }
 .chart-card:nth-child(1) .plot-window {
-  text-align: right;
   margin-bottom: 5px;
-}
-.chart-card:nth-child(1) .chart {
-  height: 430px;
-  background: #fff;
-}
-.chart-card:nth-child(1) .chart-readout {
-  text-align: right;
 }
 
 /* Supporting charts are intentionally different fragments. */
-.chart-card:nth-child(2) {
-  grid-column: 1 / span 8;
-  margin-top: 0;
-}
-.chart-card:nth-child(2) .chart {
-  height: 210px;
-}
-.chart-card:nth-child(2) .chart-heading {
-  border-bottom: 4px solid var(--ink);
-}
-.chart-card:nth-child(3) {
-  grid-column: 9 / -1;
-  margin-top: 112px;
-}
-.chart-card:nth-child(3) .chart {
-  height: 360px;
-}
 .chart-card:nth-child(3) .chart-heading {
   border: 0;
-  border-left: 3px solid var(--ink);
-  padding: 0 0 0 10px;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.chart-card:nth-child(3) .plot-navigation {
-  align-items: flex-start;
-  flex-direction: column;
-}
-.chart-card:nth-child(4) {
-  grid-column: 3 / span 8;
-  margin-top: 20px;
 }
 .chart-card:nth-child(4)::before {
-  content: "CLG/03.4";
   display: block;
   margin-bottom: 5px;
   font-size: .55rem;
   letter-spacing: .08em;
   color: var(--muted);
 }
-.chart-card:nth-child(4) .chart {
-  height: 175px;
-}
-.chart-card:nth-child(4) .chart-heading {
-  border-bottom: 1px solid var(--ink);
-}
 
 /* 03: calibration becomes statistical end-matter. */
 .calibration-section {
   position: relative;
-  padding-top: 118px;
-  min-height: 680px;
-}
-.calibration-register {
-  width: min(74%, 980px);
-  margin-left: auto;
-  border-bottom-width: 1px;
-}
-.calibration-section .mode-badge,
-.calibration-section .section-intro {
-  display: none !important;
 }
 .performance-grid {
-  position: relative;
-  min-height: 390px;
-  margin: 0;
-  display: block;
   border: 0;
 }
 .performance-metric {
-  position: absolute;
-  width: auto;
-  min-width: 160px;
-  padding: 7px 0 0 !important;
   border: 0 !important;
-  border-top: 2px solid var(--ink) !important;
 }
 .performance-metric:nth-child(1) {
   left: 2%;
   top: 72px;
-  width: 15%;
-  margin: 0;
 }
 .performance-metric:nth-child(2) {
   left: 24%;
   top: 0;
-  width: 22%;
-  border-top-width: 5px !important;
 }
 .performance-metric:nth-child(3) {
   left: 49%;
   top: 126px;
-  width: 22%;
-  margin: 0;
-  border-top-width: 1px !important;
 }
 .performance-metric:nth-child(4) {
   right: 0;
   top: 25px;
-  width: 26%;
-  margin: 0;
-  border-top-width: 6px !important;
-}
-.performance-metric:nth-child(4) .performance-value {
-  font-size: clamp(5rem, 9vw, 9rem);
 }
 .performance-metric h3 {
   margin-bottom: 8px;
   font-size: .575rem;
 }
-.model-details {
-  width: min(54%, 740px);
-  margin: 18px 0 0 auto;
-  border-top: 1px solid var(--ink);
-}
 .model-details::before {
-  content: "CLG/04.2";
   display: block;
   padding-top: 6px;
   font-size: .55rem;
@@ -1816,7 +791,6 @@ body { background: var(--page); }
 
 /* Folio-like registration details. */
 .site-footer::before {
-  content: "CLG/MET · PUBLIC SHEET";
   font-size: .525rem;
   letter-spacing: .08em;
   color: var(--muted);
@@ -1830,100 +804,22 @@ body { background: var(--page); }
 
 /* Desktop gets the radical composition; smaller screens return to a calm reading order. */
 @media (max-width: 1050px) {
-  .masthead {
-    grid-template-columns: 1fr minmax(240px, .55fr);
-    min-height: 0;
-  }
-  .wordmark { grid-column: 1 / -1; }
-  .masthead-live { grid-column: 1; min-height: 300px; }
   .masthead-meta { grid-column: 2; }
-  .measurement-matrix { width: 100%; padding-left: 0; }
 }
 
 @media (max-width: 900px) {
-  .weather-section { padding-top: 80px; }
   .chart-card:nth-child(1) {
     margin-inline: 0;
     padding-inline: 18px;
   }
-  .chart-card:nth-child(2),
-  .chart-card:nth-child(3),
-  .chart-card:nth-child(4) {
-    grid-column: 1 / -1;
-    margin-top: 0;
-  }
-  .chart-card:nth-child(2) .chart,
-  .chart-card:nth-child(3) .chart,
-  .chart-card:nth-child(4) .chart {
-    height: 260px;
-  }
-  .chart-card:nth-child(3) .plot-navigation {
-    flex-direction: row;
-    align-items: baseline;
-  }
-  .performance-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 0;
-    gap: 28px 22px;
-  }
-  .performance-metric,
-  .performance-metric:nth-child(1),
-  .performance-metric:nth-child(2),
-  .performance-metric:nth-child(3),
-  .performance-metric:nth-child(4) {
-    position: static;
-    width: auto;
-    margin: 0;
-  }
-  .model-details,
-  .calibration-register {
-    width: 100%;
-  }
 }
 
 @media (max-width: 620px) {
-  .masthead {
-    display: block;
-    padding-top: 14px;
-  }
-  .wordmark {
-    display: block;
-    font-size: clamp(6.8rem, 31vw, 10rem);
-    margin-bottom: 34px;
-  }
-  .masthead-live {
-    min-height: 260px;
-    margin-bottom: 32px;
-  }
-  .masthead-temperature > span:first-child {
-    font-size: clamp(7rem, 33vw, 11rem);
-  }
-  .masthead-meta {
-    text-align: left;
-    justify-items: start;
-    width: 100%;
-  }
-  .observations { padding-top: 26px; }
-  .section-register { margin-bottom: 14px; }
-  .section-number { font-size: 4.3rem; }
-  .chart-card:nth-child(1) .chart-heading h3 {
-    font-size: clamp(3.4rem, 18vw, 5.3rem);
-    transform: translateY(12px);
-  }
-  .chart-card:nth-child(1) .chart { height: 320px; }
-  .performance-grid { grid-template-columns: 1fr; }
-  .performance-metric:nth-child(4) .performance-value {
-    font-size: clamp(4rem, 21vw, 6.8rem);
-  }
   .site-footer {
     grid-template-columns: 1fr auto;
   }
   .site-footer::before { grid-column: 1 / -1; }
 }
-
-
-/* Connected editorial system — keep the character, restore one visual spine. */
 
 /* Masthead returns to one clear object. */
 .masthead {
@@ -1951,21 +847,14 @@ body { background: var(--page); }
   text-align: right;
   justify-items: end;
 }
-.masthead-live { display: none !important; }
 
 /* All three numbered sections use the same registration system. */
-.observations,
-.weather-section,
-.calibration-section {
-  padding-top: 72px;
-}
 .section-register {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
   width: 100%;
-  margin-bottom: 22px;
   padding-bottom: 7px;
   border-bottom: 3px solid var(--ink);
 }
@@ -1986,7 +875,6 @@ body { background: var(--page); }
 }
 .section-ref {
   padding-bottom: 3px;
-  font-size: .575rem;
   letter-spacing: .08em;
 }
 
@@ -1994,7 +882,6 @@ body { background: var(--page); }
 .current-panel {
   display: grid;
   grid-template-columns: minmax(300px, .9fr) minmax(0, 1.55fr);
-  gap: clamp(38px, 6vw, 88px);
   align-items: end;
   padding: 6px 0 0;
 }
@@ -2023,7 +910,6 @@ body { background: var(--page); }
   justify-content: space-between;
   align-items: baseline;
   gap: 16px;
-  margin-top: 18px;
   padding-top: 7px;
   border-top: 1px solid var(--ink);
 }
@@ -2042,7 +928,6 @@ body { background: var(--page); }
   margin: 0;
   padding: 0;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 26px 20px;
   align-items: end;
   border-top: 0;
 }
@@ -2076,7 +961,6 @@ body { background: var(--page); }
 }
 
 /* 02: one chart family, with Temperature clearly dominant. */
-.weather-section { padding-top: 94px; }
 .chart-toolbar {
   margin: 0 0 18px;
   padding: 0;
@@ -2102,7 +986,6 @@ body { background: var(--page); }
 .chart-card:nth-child(1) .chart-heading h3 {
   font-size: clamp(3.8rem, 7vw, 7rem);
   line-height: .72;
-  letter-spacing: -.085em;
   transform: none;
 }
 .chart-card:nth-child(1) .plot-navigation {
@@ -2162,13 +1045,11 @@ body { background: var(--page); }
 }
 .chart-card:nth-child(4) .chart-heading {
   padding-left: 0;
-  border-bottom-width: 3px;
 }
 
 /* 03: four metrics share one horizontal baseline again. */
 .calibration-section {
   min-height: 0;
-  padding-top: 96px;
 }
 .calibration-section .mode-badge,
 .calibration-section .section-intro {
@@ -2181,7 +1062,6 @@ body { background: var(--page); }
   gap: 0 24px;
   min-height: 0;
   margin: 0;
-  align-items: start;
 }
 .performance-metric,
 .performance-metric:nth-child(1),
@@ -2223,7 +1103,6 @@ body { background: var(--page); }
   .wordmark { grid-column: auto; }
   .current-panel {
     grid-template-columns: 1fr;
-    gap: 38px;
   }
   .measurement-matrix {
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2256,31 +1135,14 @@ body { background: var(--page); }
 @media (max-width: 620px) {
   .masthead {
     display: block;
-    padding-top: 16px;
   }
   .wordmark {
     display: block;
-    font-size: clamp(6.4rem, 29vw, 9.4rem);
-    margin-bottom: 28px;
   }
   .masthead-meta {
     width: 100%;
     text-align: left;
     justify-items: start;
-  }
-  .observations,
-  .weather-section,
-  .calibration-section {
-    padding-top: 58px;
-  }
-  .section-register {
-    margin-bottom: 16px;
-  }
-  .section-number {
-    font-size: 4.2rem;
-  }
-  .temperature-reading > span:first-child {
-    font-size: clamp(7rem, 32vw, 10.5rem);
   }
   .measurement-matrix {
     grid-template-columns: 1fr;
@@ -2294,14 +1156,10 @@ body { background: var(--page); }
   .measurement-row:nth-child(6) {
     grid-column: 1;
   }
-  .chart-card:nth-child(1) .chart-heading h3 {
-    font-size: clamp(3.1rem, 16vw, 4.8rem);
-  }
   .performance-grid {
     grid-template-columns: 1fr;
   }
 }
-
 
 /* Final art-direction polish — rhythm, chart typography, alignment and mobile. */
 :root {
@@ -2310,11 +1168,6 @@ body { background: var(--page); }
 }
 
 /* Keep the page moving on one consistent vertical rhythm. */
-.observations,
-.weather-section,
-.calibration-section {
-  padding-top: var(--section-space);
-}
 .section-register {
   margin-bottom: 24px;
 }
@@ -2361,15 +1214,8 @@ body { background: var(--page); }
 }
 .chart-axis-label,
 .chart-empty-label {
-  font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: .02em;
-}
-.chart-axis-time {
-  font-variant-numeric: tabular-nums;
-}
-.chart-axis-value {
-  font-variant-numeric: tabular-nums;
 }
 .chart-empty-label {
   letter-spacing: .04em;
@@ -2597,7 +1443,6 @@ body { background: var(--page); }
   }
 }
 
-
 /* Full-screen chart focus mode. */
 body.chart-fullscreen-open {
   overflow: hidden;
@@ -2626,10 +1471,6 @@ body.chart-fullscreen-open {
   line-height: .65;
   letter-spacing: -.08em;
   cursor: pointer;
-}
-
-.chart-fullscreen-close[hidden] {
-  display: none;
 }
 
 .chart-card.is-fullscreen {
@@ -2673,11 +1514,6 @@ body.chart-fullscreen-open {
   user-select: none;
 }
 
-.chart-card.is-fullscreen .chart-readout {
-  min-height: 34px;
-  padding-bottom: 0;
-}
-
 @media (max-width: 620px) {
   .chart-card.is-fullscreen {
     padding: 12px 14px 10px !important;
@@ -2703,7 +1539,6 @@ body.chart-fullscreen-open {
     min-height: 180px;
   }
 }
-
 
 /* Full-screen trace crosshair. */
 .chart-card.is-fullscreen .chart-crosshair-line {
@@ -2789,7 +1624,6 @@ body.chart-fullscreen-open {
   }
 }
 
-
 /* Multi-station controls and comparison views. */
 .station-selector {
   display: inline-flex;
@@ -2863,8 +1697,6 @@ body.chart-fullscreen-open {
   flex-basis: 100%;
   margin-top: 4px;
   color: var(--ink);
-  font-weight: 700;
-  letter-spacing: .035em;
 }
 
 @media (max-width: 760px) {
@@ -2872,7 +1704,6 @@ body.chart-fullscreen-open {
   .dual-current-grid, .dual-calibration-grid { grid-template-columns: 1fr; }
   .dual-current-card { padding: 16px; }
 }
-
 
 /* 01: Station locations on an outline map of Greater London, first on the
    page, so current conditions take the regular section spacing. */
@@ -3050,4 +1881,112 @@ body.chart-fullscreen-open {
   .map-north span { font-size: .8125rem; }
 }
 @media (max-width: 540px) { .map-river-label { display: none; } }
-@media (prefers-reduced-motion: reduce) { .map-marker { transition: none; } }
+
+/* Rain map: latest radar, then the forecast for the next four hours, in ink. */
+.map-radar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+}
+.radar-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.radar-play {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: .625rem;
+  line-height: 1;
+}
+.radar-play:hover:not(:disabled) { background: var(--ink); color: #fff; }
+.radar-play:disabled { opacity: .35; cursor: default; }
+.radar-timeline { min-width: 0; }
+.radar-timeline input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.radar-timeline input[type="range"]:disabled { opacity: .35; cursor: default; }
+.radar-timeline input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--ink); }
+.radar-timeline input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 18px;
+  margin-top: -8.5px;
+  border: 0;
+  border-radius: 0;
+  background: var(--ink);
+}
+.radar-timeline input[type="range"]::-moz-range-track { height: 1px; background: var(--ink); }
+.radar-timeline input[type="range"]::-moz-range-thumb { width: 10px; height: 18px; border: 0; border-radius: 0; background: var(--ink); }
+.radar-ticks {
+  position: relative;
+  height: 14px;
+  margin: 2px 5px 0;
+  font-size: .5625rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.radar-ticks span { position: absolute; top: 0; transform: translateX(-50%); }
+.radar-ticks span:nth-child(1) { left: 0; transform: none; margin-left: -5px; }
+.radar-ticks span:nth-child(2) { left: 25%; }
+.radar-ticks span:nth-child(3) { left: 50%; }
+.radar-ticks span:nth-child(4) { left: 75%; }
+.radar-ticks span:nth-child(5) { left: 100%; transform: translateX(-100%); margin-left: 5px; }
+.radar-readout {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+}
+.radar-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .5625rem;
+  font-weight: 400;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.radar-ramp {
+  width: 64px;
+  height: 6px;
+  background: linear-gradient(90deg, rgba(17, 17, 17, .14), rgba(17, 17, 17, .8));
+}
+.radar-credit {
+  grid-column: 1 / -1;
+  margin: -2px 0 0;
+  font-size: .5625rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) { .radar-play { transition: none; } }
