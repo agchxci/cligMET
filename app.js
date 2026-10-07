@@ -129,6 +129,19 @@
       button.setAttribute('aria-pressed', String(active));
       button.disabled = state.compatibilityMode && !active;
     });
+    renderStationMap();
+  }
+
+  function renderStationMap() {
+    if (!window.CligmetStationMap) return;
+    const readings = new Map();
+    for (const stationId of selectedStationIds()) {
+      const snapshot = state.snapshots.get(stationId);
+      if (!snapshot) continue;
+      const observation = snapshot.current?.available ? snapshot.current.observation || {} : {};
+      readings.set(stationId, { temperature: number(observation.temperature), state: stationFreshness(snapshot).state });
+    }
+    window.CligmetStationMap.update(state.stationSelection, readings);
   }
 
   function renderDualObservationCard(stationId, snapshot) {
